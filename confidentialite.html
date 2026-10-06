@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Devinons – Politique de confidentialité</title>
+<meta name="description" content="Politique de confidentialité de l'application Devinons : quelles données sont traitées, pourquoi, et comment les supprimer.">
+<style>
+  :root {
+    --papier: #F7F1E3;
+    --encre: #1D2B4F;
+    --rose: #FF48B0;
+    --bleu: #0078BF;
+    --jaune: #FFE800;
+    --carte: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --papier: #14192B; --encre: #EDE7D8; --carte: #1E2540; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--papier);
+    color: var(--encre);
+    font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 4px; }
+  h2 {
+    font-size: 1.3rem;
+    margin: 40px 0 12px;
+    padding-left: 12px;
+    border-left: 6px solid var(--rose);
+  }
+  .date { opacity: .75; margin: 0 0 24px; }
+  .resume {
+    background: var(--carte);
+    border: 2px solid var(--encre);
+    border-radius: 16px;
+    box-shadow: 4px 5px 0 var(--bleu);
+    padding: 16px 20px;
+  }
+  .resume ul { margin: 8px 0 0; padding-left: 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid color-mix(in srgb, var(--encre) 25%, transparent); }
+  th { font-weight: 700; }
+  .tableau { overflow-x: auto; }
+  a { color: var(--bleu); }
+  @media (prefers-color-scheme: dark) { a { color: #6CC3FF; } }
+  code { font-size: .9em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Politique de confidentialité de Devinons</h1>
+  <p class="date">Dernière mise à jour : 6 octobre 2026</p>
+
+  <p>Devinons est un jeu de devinettes en famille ou entre amis, dès 4 ans, édité par
+  <strong>Leduniste</strong> (contact : <a href="mailto:thibaultsoulignac@gmail.com">thibaultsoulignac@gmail.com</a>).
+  Cette page explique quelles données l'application utilise, pourquoi, et comment les faire supprimer.</p>
+
+  <div class="resume">
+    <strong>En bref</strong>
+    <ul>
+      <li>Pas de compte à créer : ni adresse e-mail, ni numéro de téléphone, ni mot de passe.</li>
+      <li>Seuls les prénoms ou surnoms que vous choisissez pour les joueurs, et leurs scores, sont partagés entre les téléphones de votre groupe.</li>
+      <li>Aucune localisation, aucun contact, aucune photo, aucun enregistrement audio.</li>
+      <li>Les publicités sont réglées pour un public familial : jamais personnalisées.</li>
+      <li>Aucune donnée n'est vendue.</li>
+    </ul>
+  </div>
+
+  <h2>1. Les données utilisées</h2>
+  <div class="tableau">
+  <table>
+    <tr><th>Donnée</th><th>Pourquoi</th><th>Où</th></tr>
+    <tr>
+      <td><strong>Identifiant anonyme du téléphone</strong>, créé automatiquement (Firebase Authentication). Il ne contient ni nom ni adresse.</td>
+      <td>Relier un téléphone à son groupe et protéger les données du groupe.</td>
+      <td>Serveurs Firebase (Google)</td>
+    </tr>
+    <tr>
+      <td><strong>Données du groupe</strong> : nom du groupe, code d'invitation, prénoms ou surnoms des joueurs saisis dans l'application, couleur d'avatar, scores et statistiques de jeu, questions déjà posées, identifiants anonymes des téléphones du groupe.</td>
+      <td>Partager le classement et les joueurs entre les téléphones du groupe, et éviter de reposer les mêmes questions.</td>
+      <td>Serveurs Firebase. Seuls les téléphones membres du groupe peuvent les lire.</td>
+    </tr>
+    <tr>
+      <td><strong>Signalements de questions</strong> : la question, le motif choisi, la date, l'identifiant anonyme du téléphone et du groupe.</td>
+      <td>Corriger ou retirer les questions erronées.</td>
+      <td>Serveurs Firebase. Lus uniquement par l'éditeur.</td>
+    </tr>
+    <tr>
+      <td><strong>Intérêt pour les modes à venir</strong> (bouton « Préviens-moi ») : compteurs anonymes ; pour ceux qui demandent à être prévenus, l'identifiant anonyme, la date et, si vous l'autorisez, le jeton de notification du téléphone.</td>
+      <td>Savoir quel mode développer en premier et vous prévenir de sa sortie.</td>
+      <td>Serveurs Firebase.</td>
+    </tr>
+    <tr>
+      <td><strong>Réglages</strong> : sons activés ou non, derniers choix de partie, profils tant que le groupe n'est pas créé.</td>
+      <td>Retrouver vos réglages d'une partie à l'autre.</td>
+      <td>Uniquement sur votre téléphone.</td>
+    </tr>
+    <tr>
+      <td><strong>Données techniques publicitaires</strong> traitées par Google AdMob (par exemple modèle de l'appareil, adresse IP).</td>
+      <td>Afficher les publicités et en mesurer l'affichage.</td>
+      <td>Serveurs de Google.</td>
+    </tr>
+  </table>
+  </div>
+
+  <p>Les réponses secrètes du mode « On se connaît » restent sur le téléphone le temps de la partie : elles ne sont jamais envoyées ni conservées.</p>
+
+  <h2>2. Publicité</h2>
+  <p>L'application affiche des publicités via Google AdMob : une bannière sur l'accueil et, au plus toutes les 5 minutes, une publicité en plein écran en fin de partie. Elles sont configurées pour un public familial : traitement « enfant » demandé à Google, publicités <strong>non personnalisées</strong>, contenu classé tous publics (G). Pour en savoir plus sur le traitement des données par Google :
+  <a href="https://policies.google.com/technologies/partner-sites">policies.google.com/technologies/partner-sites</a>.</p>
+
+  <h2>3. Les enfants</h2>
+  <p>Devinons s'adresse aux familles, y compris aux enfants dès 4 ans, qui jouent en principe avec un adulte. L'application ne demande aucune information personnelle : un prénom ou un surnom suffit pour chaque joueur, et nous recommandons d'utiliser un surnom pour les enfants. Aucune donnée n'est utilisée pour du profilage ou de la publicité ciblée.</p>
+
+  <h2>4. Partage et hébergement</h2>
+  <p>Les données ne sont partagées qu'avec les prestataires techniques de l'application : Google Firebase (authentification anonyme, base de données, notifications) et Google AdMob (publicité). Elles ne sont jamais vendues. Les serveurs de Google peuvent être situés hors de l'Union européenne ; Google encadre ces transferts par les clauses contractuelles types de la Commission européenne.</p>
+
+  <h2>5. Durée de conservation</h2>
+  <p>Les données d'un groupe sont conservées tant que le groupe existe. Un joueur supprimé dans l'application est effacé des serveurs. Les signalements sont conservés le temps de traiter la question concernée. Les données « Préviens-moi » sont supprimées au plus tard un an après la sortie du mode concerné.</p>
+
+  <h2 id="suppression">6. Supprimer vos données</h2>
+  <ul>
+    <li><strong>Un joueur</strong> : dans l'écran de choix des joueurs, faites un appui long sur son nom, puis « Supprimer ». Sa fiche est effacée des serveurs.</li>
+    <li><strong>Un groupe entier</strong> : retirer un groupe du téléphone ne l'efface pas des serveurs, car d'autres téléphones peuvent l'utiliser. Pour supprimer définitivement un groupe et toutes ses données, écrivez à
+      <a href="mailto:thibaultsoulignac@gmail.com?subject=Devinons%20-%20suppression%20de%20donn%C3%A9es">thibaultsoulignac@gmail.com</a>
+      en indiquant le <strong>code d'invitation</strong> du groupe (écran « Mes groupes »). La suppression est faite sous 30 jours.</li>
+    <li><strong>Les réglages</strong> stockés sur le téléphone sont effacés en désinstallant l'application.</li>
+  </ul>
+
+  <h2>7. Vos droits</h2>
+  <p>Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation et d'opposition sur vos données. Pour l'exercer, écrivez à
+  <a href="mailto:thibaultsoulignac@gmail.com">thibaultsoulignac@gmail.com</a>. Si vous estimez que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL (<a href="https://www.cnil.fr">www.cnil.fr</a>).</p>
+
+  <h2>8. Modifications</h2>
+  <p>Cette politique peut évoluer avec l'application. La date de dernière mise à jour figure en haut de la page.</p>
+</main>
+</body>
+</html>
