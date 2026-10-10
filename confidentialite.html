@@ -53,7 +53,7 @@
 <body>
 <main>
   <h1>Politique de confidentialité de Devinons</h1>
-  <p class="date">Dernière mise à jour : 6 octobre 2026</p>
+  <p class="date">Dernière mise à jour : 10 octobre 2026</p>
 
   <p>Devinons est un jeu de devinettes en famille ou entre amis, dès 4 ans, édité par
   <strong>Leduniste</strong> (contact : <a href="mailto:thibaultsoulignac@gmail.com">thibaultsoulignac@gmail.com</a>).
@@ -80,9 +80,14 @@
       <td>Serveurs Firebase (Google)</td>
     </tr>
     <tr>
-      <td><strong>Données du groupe</strong> : nom du groupe, code d'invitation, prénoms ou surnoms des joueurs saisis dans l'application, couleur d'avatar, scores et statistiques de jeu, questions déjà posées, identifiants anonymes des téléphones du groupe.</td>
+      <td><strong>Données du groupe</strong> : nom du groupe, code d'invitation, prénoms ou surnoms des joueurs saisis dans l'application, couleur d'avatar, scores et statistiques de jeu, questions déjà posées, série de semaines jouées, identifiants anonymes des téléphones du groupe.</td>
       <td>Partager le classement et les joueurs entre les téléphones du groupe, et éviter de reposer les mêmes questions.</td>
       <td>Serveurs Firebase. Seuls les téléphones membres du groupe peuvent les lire.</td>
+    </tr>
+    <tr>
+      <td><strong>Rappels de la série</strong> (facultatifs, activés dans l'application) : le jeton de notification du téléphone, rangé dans chacun de ses groupes.</td>
+      <td>Prévenir le mercredi soir et le samedi matin quand la série du groupe est en jeu et que personne n'a encore joué de la semaine.</td>
+      <td>Serveurs Firebase. Retiré dès que les rappels sont coupés.</td>
     </tr>
     <tr>
       <td><strong>Signalements de questions</strong> : la question, le motif choisi, la date, l'identifiant anonyme du téléphone et du groupe.</td>
@@ -95,7 +100,12 @@
       <td>Serveurs Firebase.</td>
     </tr>
     <tr>
-      <td><strong>Réglages</strong> : sons activés ou non, derniers choix de partie, profils tant que le groupe n'est pas créé.</td>
+      <td><strong>Image partagée</strong> (bouton « Partager » en fin de partie) : une image du podium avec les prénoms ou surnoms et les scores.</td>
+      <td>La partager si vous le décidez, avec l'application de votre choix.</td>
+      <td>Créée sur votre téléphone, jamais envoyée à l'éditeur.</td>
+    </tr>
+    <tr>
+      <td><strong>Réglages</strong> : sons et rappels activés ou non, derniers choix de partie, profils tant que le groupe n'est pas créé.</td>
       <td>Retrouver vos réglages d'une partie à l'autre.</td>
       <td>Uniquement sur votre téléphone.</td>
     </tr>
@@ -120,7 +130,7 @@
   <p>Les données ne sont partagées qu'avec les prestataires techniques de l'application : Google Firebase (authentification anonyme, base de données, notifications) et Google AdMob (publicité). Elles ne sont jamais vendues. Les serveurs de Google peuvent être situés hors de l'Union européenne ; Google encadre ces transferts par les clauses contractuelles types de la Commission européenne.</p>
 
   <h2>5. Durée de conservation</h2>
-  <p>Les données d'un groupe sont conservées tant que le groupe existe. Un joueur supprimé dans l'application est effacé des serveurs. Les signalements sont conservés le temps de traiter la question concernée. Les données « Préviens-moi » sont supprimées au plus tard un an après la sortie du mode concerné.</p>
+  <p>Les données d'un groupe sont conservées tant que le groupe existe. Un joueur supprimé dans l'application est effacé des serveurs. Les signalements sont conservés le temps de traiter la question concernée. Le jeton des rappels est effacé dès que vous les coupez, ou quand le téléphone ne peut plus les recevoir (application désinstallée). Les données « Préviens-moi » sont supprimées au plus tard un an après la sortie du mode concerné.</p>
 
   <h2 id="suppression">6. Supprimer vos données</h2>
   <ul>
