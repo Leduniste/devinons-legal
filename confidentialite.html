@@ -53,7 +53,7 @@
 <body>
 <main>
   <h1>Politique de confidentialité de Devinons</h1>
-  <p class="date">Dernière mise à jour : 10 octobre 2026</p>
+  <p class="date">Dernière mise à jour : 10 octobre 2026 (parties à plusieurs téléphones)</p>
 
   <p>Devinons est un jeu de devinettes en famille ou entre amis, dès 4 ans, édité par
   <strong>Leduniste</strong> (contact : <a href="mailto:thibaultsoulignac@gmail.com">thibaultsoulignac@gmail.com</a>).
@@ -64,7 +64,7 @@
     <ul>
       <li>Pas de compte à créer : ni adresse e-mail, ni numéro de téléphone, ni mot de passe.</li>
       <li>Seuls les prénoms ou surnoms que vous choisissez pour les joueurs, et leurs scores, sont partagés entre les téléphones de votre groupe.</li>
-      <li>Aucune localisation, aucun contact, aucune photo, aucun enregistrement audio.</li>
+      <li>Aucune localisation, aucun contact, aucune photo, aucun enregistrement audio. L'appareil photo ne sert qu'à lire le QR code d'une partie, si vous le choisissez : aucune image n'est enregistrée.</li>
       <li>Les publicités sont réglées pour un public familial : jamais personnalisées.</li>
       <li>Aucune donnée n'est vendue.</li>
     </ul>
@@ -88,6 +88,11 @@
       <td><strong>Rappels de la série</strong> (facultatifs, activés dans l'application) : le jeton de notification du téléphone, rangé dans chacun de ses groupes.</td>
       <td>Prévenir le mercredi soir et le samedi matin quand la série du groupe est en jeu et que personne n'a encore joué de la semaine.</td>
       <td>Serveurs Firebase. Retiré dès que les rappels sont coupés.</td>
+    </tr>
+    <tr>
+      <td><strong>Partie jouée sur plusieurs téléphones</strong> (QR code) : prénoms ou surnoms et couleurs des joueurs de la partie, questions, réponses et scores en cours, identifiants anonymes des téléphones.</td>
+      <td>Afficher la même partie en direct sur les téléphones invités.</td>
+      <td>Serveurs Firebase, lisibles avec le code de la partie. Effacé dès la fin de la partie.</td>
     </tr>
     <tr>
       <td><strong>Signalements de questions</strong> : la question, le motif choisi, la date, l'identifiant anonyme du téléphone et du groupe.</td>
