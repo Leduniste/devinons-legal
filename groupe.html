@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rejoindre un groupe</title>
+<meta name="description" content="Rejoindre un groupe Devinons : joueurs, classement, série et XP partagés.">
+<style>
+  :root { --papier: #F7F1E3; --encre: #1D2B4F; --rose: #FF48B0; --bleu: #0078BF; --jaune: #FFE800; --carte: #FFFFFF; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --papier: #14192B; --encre: #EDE7D8; --carte: #1E2540; }
+  }
+  :root[data-theme="dark"] { --papier: #14192B; --encre: #EDE7D8; --carte: #1E2540; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--papier); color: var(--encre);
+         font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 520px; margin: 0 auto; padding: 40px 16px 64px; text-align: center; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 8px; }
+  .carte { background: var(--carte); border: 2px solid var(--encre); border-radius: 18px;
+           box-shadow: 4px 5px 0 var(--rose); padding: 20px; margin: 24px 0; }
+  .code { font-size: 2.6rem; font-weight: 800; letter-spacing: .3em; margin: 4px 0 0; }
+  ol { text-align: left; margin: 0; padding-left: 22px; }
+  .bouton { display: inline-block; background: var(--jaune); color: #1D2B4F; font-weight: 800;
+            text-decoration: none; border: 2px solid #1D2B4F; border-radius: 14px;
+            box-shadow: 3px 4px 0 var(--bleu); padding: 12px 22px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Rejoignez notre groupe !</h1>
+  <p>On vous invite dans un groupe <strong>Devinons</strong>, le quiz en famille : joueurs, classement, série et XP partagés.</p>
+  <div class="carte" id="bloc-code" hidden>
+    Code du groupe
+    <p class="code" id="code"></p>
+  </div>
+  <div class="carte">
+    <ol>
+      <li>Installez Devinons (gratuit).</li>
+      <li>Ouvrez « Mes groupes » puis touchez « Rejoindre ».</li>
+      <li>Scannez le QR code ou saisissez le code.</li>
+    </ol>
+  </div>
+  <a class="bouton" href="https://play.google.com/store/apps/details?id=com.leduniste.devinons">Installer Devinons sur Google Play</a>
+</main>
+<script>
+  const code = (new URLSearchParams(location.search).get('code') || '').toUpperCase();
+  if (/^[A-Z0-9]{6}$/.test(code)) {
+    document.getElementById('code').textContent = code;
+    document.getElementById('bloc-code').hidden = false;
+  }
+</script>
+</body>
+</html>
