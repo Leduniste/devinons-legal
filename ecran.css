@@ -1,0 +1,85 @@
+/* Mode télé : tout se mesure en fraction de l'écran (vw / vh), pour être
+   lisible à 3 mètres sur une télé comme sur un ordinateur. */
+
+body.tele { font-size: 2.2vw; overflow: hidden; }
+body.tele main { max-width: none; height: 100vh; padding: 2vh 3vw; display: flex; flex-direction: column; }
+body.tele .logo { font-size: 3.4vw; margin: 0; text-align: left; }
+
+.tele-bandeau { display: flex; align-items: center; justify-content: space-between; gap: 2vw; min-height: 12vh; }
+.tele-compteur { font: 700 2.6vw/1 var(--titre); }
+.tele-rejoindre { display: flex; align-items: center; gap: 1vw; background: #fff; border-radius: 1vw; padding: .6vw 1vw; box-shadow: .25vw .35vw 0 rgba(0, 120, 191, .7); }
+.tele-rejoindre img { width: 8vw; height: 8vw; image-rendering: pixelated; }
+.tele-rejoindre .petit { font-size: 1.2vw; }
+.tele-code { font: 700 2.8vw/1 var(--titre); letter-spacing: .2em; }
+
+.tele-scene { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 2.4vh; min-height: 0; }
+.tele-centre { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2vh; text-align: center; }
+.tele-centre h1 { font-size: 5vw; }
+.tele-centre .logo { font-size: 5vw; text-align: center; }
+.tele-centre .classement { width: min(70vw, 1100px); }
+.tele-formulaire { display: flex; gap: 2vw; width: min(70vw, 900px); }
+.tele-formulaire .champ-code { font-size: 4vw; }
+.tele-formulaire .bouton { width: auto; font-size: 2.6vw; padding: 0 3vw; }
+body.tele .erreur { font-size: 2vw; }
+
+/* Au tour de… */
+.tele-choixNiveau { flex-direction: row; align-items: center; gap: 5vw; }
+.tele-tour { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1.5vh; text-align: center; font-size: 2.6vw; }
+.tele-tour h1 { font-size: 7vw; }
+.tele-tour .avatar.grand { width: 18vh; height: 18vh; font-size: 10vh; }
+.tele-tour .avatar.grand .accessoire { font-size: 7vh; top: -4vh; right: -3vh; }
+.tele-discret { opacity: .7; }
+.tele-cote { flex: 1; }
+
+/* Classement, podium */
+body.tele .ligne { padding: 1.2vh 1.2vw; border-radius: 1vw .4vw 1.2vw .5vw; }
+body.tele .ligne .rang, body.tele .ligne .nom, body.tele .ligne .score { font-size: 2.6vw; }
+body.tele .ligne .rang { width: 3vw; }
+body.tele .ligne .avatar { width: 4.5vw; height: 4.5vw; font-size: 2.3vw; }
+body.tele .ligne .avatar .accessoire { font-size: 1.8vw; top: -1vw; right: -.9vw; }
+body.tele .podium { width: min(80vw, 1200px); gap: 2vw; margin: 2vh 0 0; }
+body.tele .marche { max-width: none; }
+body.tele .marche .nom { font-size: 3vw; }
+body.tele .marche .score { font-size: 2vw; }
+body.tele .marche .socle { font-size: 5vw; }
+body.tele .marche .avatar.grand { width: 12vh; height: 12vh; font-size: 6vh; }
+body.tele .marche .avatar.grand .accessoire { font-size: 5vh; top: -3vh; right: -2vh; }
+
+/* Question */
+.tele-joueur { display: flex; align-items: center; gap: 1.2vw; }
+.tele-joueur .nom { font: 700 3vw/1 var(--titre); }
+.tele-joueur .avatar { width: 5.5vw; height: 5.5vw; font-size: 3vw; }
+.tele-joueur .avatar .accessoire { font-size: 2.4vw; top: -1.2vw; right: -1vw; }
+.tele-niveau { font: 700 1.8vw/1 var(--titre); padding: .8vh 1vw .5vh; border-radius: .8vw .3vw .9vw .4vw; color: var(--encre); }
+body.tele .chrono .piste { height: 2.4vh; border-radius: 2vh; }
+body.tele .chrono .secondes { font-size: 3.4vw; min-width: 7vw; }
+.tele-enonce { font: 700 3.6vw/1.15 var(--titre); padding: 3vh 2.5vw; }
+.tele-propositions { display: grid; grid-template-columns: 1fr 1fr; gap: 2vh 2vw; }
+body.tele .proposition { min-height: 11vh; font-size: 2.6vw; padding: 1.5vh 1.5vw; gap: 1.5vw; cursor: default; }
+body.tele .proposition .lettre { width: 4.4vw; height: 4.4vw; font-size: 2.4vw; }
+.tele-verdict { display: flex; align-items: center; justify-content: center; gap: 2vw; }
+body.tele .verdict { font-size: 3.4vw; }
+body.tele .bulle { font-size: 2vw; max-width: 45vw; }
+.tele-decision { text-align: center; }
+.tele-decision h1 { font-size: 7vw; color: var(--faux); }
+.tele-decision p { font-size: 3vw; }
+.tele-appel { font: 700 2.4vw/1.2 var(--titre); text-align: center; }
+
+/* On se connaît */
+.tele-secrets { display: grid; grid-template-columns: repeat(auto-fit, minmax(26vw, 1fr)); gap: 1.6vh 2vw; width: min(86vw, 1500px); }
+body.tele .tele-secrets .ligne.fini { background: #E3F6EC; }
+.tele-enonce-long { font-size: 3vw; white-space: pre-line; }
+.tele-vises { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1.5vw; font: 700 3vw/1.1 var(--titre); }
+.tele-vise { display: inline-flex; align-items: center; gap: 1vw; background: var(--juste); color: #fff; padding: 1vh 1.5vw; border-radius: 1vw .4vw 1.2vw .5vw; }
+.tele-vise .avatar { width: 5vw; height: 5vw; font-size: 2.6vw; }
+.tele-scores .classement { grid-template-columns: repeat(auto-fit, minmax(22vw, 1fr)); }
+body.tele .tele-scores .ligne .rang, body.tele .tele-scores .ligne .nom, body.tele .tele-scores .ligne .score { font-size: 2vw; }
+
+/* Écran en hauteur (téléphone recopié en portrait) : une colonne. */
+@media (max-aspect-ratio: 1/1) {
+  body.tele { font-size: 4vw; overflow: auto; }
+  .tele-choixNiveau { flex-direction: column; }
+  .tele-propositions { grid-template-columns: 1fr; }
+  body.tele .proposition { font-size: 5vw; }
+  .tele-enonce { font-size: 6vw; }
+}

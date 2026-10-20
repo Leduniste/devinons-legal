@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Devinons sur la télé</title>
+<meta name="description" content="Afficher en grand une partie de Devinons, le quiz en famille, sur une télé ou un ordinateur.">
+<meta name="theme-color" content="#F7F1E3">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Gluten:wght@700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="ecran.css">
+</head>
+<body class="tele">
+<main id="app">
+  <div class="tele-centre">
+    <div class="logo" aria-label="Devinons"><span>D</span><span>e</span><span>v</span><span>i</span><span>n</span><span>o</span><span>n</span><span>s</span></div>
+    <p class="points-attente">Chargement</p>
+  </div>
+</main>
+<script nomodule>
+  document.querySelector('.points-attente').textContent = 'Ce navigateur est trop ancien pour afficher la partie. Essaie avec un ordinateur ou la recopie d\'écran d\'un téléphone.';
+</script>
+<script type="module" src="js/ecran.js"></script>
+</body>
+</html>

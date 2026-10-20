@@ -1,0 +1,336 @@
+/* Devinons dans le navigateur : papier découpé, impression riso.
+   Mêmes encres que l'appli (lib/core/theme/app_colors.dart), mêmes
+   polices (Gluten pour les titres, Atkinson Hyperlegible pour le reste).
+   Tout en CSS, sans image : léger à charger sur un vieux téléphone. */
+
+:root {
+  --papier: #F7F1E3;
+  --encre: #1D2B4F;
+  --rose: #FF48B0;
+  --bleu: #0078BF;
+  --jaune: #FFE800;
+  --vert: #00A95C;
+  --juste: #00A95C;
+  --faux: #F15060;
+  --carte: #FFFFFF;
+  --titre: 'Gluten', 'Comic Sans MS', 'Chalkboard SE', cursive;
+  --texte: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --decoupe: 16px 6px 18px 8px / 8px 16px 6px 18px;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--papier);
+  /* Fibres du papier. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .17 0 0 0 0 .31 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+  color: var(--encre);
+  font: 700 17px/1.45 var(--texte);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Deux grandes taches de trame riso : rose en haut à droite, jaune en bas à gauche. */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  width: 70vmin;
+  height: 70vmin;
+  border-radius: 50%;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(circle, #000 35%, transparent 70%);
+  mask-image: radial-gradient(circle, #000 35%, transparent 70%);
+}
+body::before {
+  top: -22vmin;
+  right: -22vmin;
+  background: radial-gradient(circle, var(--rose) 1.6px, transparent 2px) 0 0 / 8px 8px;
+  opacity: .55;
+}
+body::after {
+  bottom: -24vmin;
+  left: -24vmin;
+  background: radial-gradient(circle, #F2C500 1.8px, transparent 2.2px) 0 0 / 8px 8px;
+  opacity: .6;
+}
+
+main {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(40px, env(safe-area-inset-bottom));
+}
+
+h1, h2, h3, .titre {
+  font-family: var(--titre);
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0;
+}
+h1 { font-size: 40px; }
+h2 { font-size: 26px; }
+p { margin: 8px 0; }
+.centre { text-align: center; }
+.petit { font-size: 14px; }
+.discret { opacity: .75; }
+.pile > * + * { margin-top: 12px; }
+.espace { height: 20px; }
+[hidden] { display: none !important; }
+
+/* Logo : les lettres de Devinons dans les quatre encres. */
+.logo { font-family: var(--titre); font-size: 44px; font-weight: 800; text-align: center; letter-spacing: 1px; margin: 8px 0 4px; }
+.logo span:nth-child(4n+1) { color: var(--rose); }
+.logo span:nth-child(4n+2) { color: var(--bleu); }
+.logo span:nth-child(4n+3) { color: #E0B800; }
+.logo span:nth-child(4n) { color: var(--vert); }
+
+/* Feuille de papier découpée, posée de travers, seconde encre décalée. */
+.carte {
+  position: relative;
+  background: var(--carte);
+  border-radius: var(--decoupe);
+  box-shadow: 3px 4px 0 rgba(255, 72, 176, .85);
+  padding: 18px;
+  transform: rotate(-.6deg);
+}
+.carte:nth-of-type(even) { transform: rotate(.5deg); border-radius: 7px 17px 9px 15px / 15px 8px 17px 7px; }
+.carte.rose { background: var(--rose); box-shadow: 3px 4px 0 rgba(0, 120, 191, .85); }
+.carte.jaune { background: var(--jaune); }
+.carte.droite { transform: none; }
+
+/* Bouton (BoutonEncre). */
+.bouton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 58px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: var(--decoupe);
+  background: var(--bleu);
+  color: #fff;
+  font: 700 22px/1.1 var(--titre);
+  text-decoration: none;
+  box-shadow: 3px 4px 0 rgba(255, 72, 176, .85);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform .08s;
+}
+.bouton:active { transform: translate(2px, 3px); box-shadow: 1px 1px 0 rgba(255, 72, 176, .85); }
+.bouton.jaune { background: var(--jaune); color: var(--encre); }
+.bouton.blanc { background: #fff; color: var(--encre); }
+.bouton.rose { background: var(--rose); color: #fff; box-shadow: 3px 4px 0 rgba(0, 120, 191, .85); }
+.bouton.lien { background: none; box-shadow: none; color: var(--encre); font: 700 16px/1.2 var(--texte); text-decoration: underline; min-height: 44px; }
+.bouton:disabled { opacity: .45; cursor: default; }
+
+/* Champ du code de la partie. */
+.champ-code {
+  width: 100%;
+  font: 700 40px/1 var(--titre);
+  letter-spacing: .25em;
+  text-align: center;
+  text-transform: uppercase;
+  padding: 14px 8px 10px;
+  border: 3px solid var(--encre);
+  border-radius: var(--decoupe);
+  background: #fff;
+  color: var(--encre);
+}
+.champ-code::placeholder { color: var(--encre); opacity: .25; }
+.champ-code:focus { outline: 3px solid var(--rose); outline-offset: 2px; }
+
+/* Avatar : pastille de couleur, initiale, accessoire. */
+.avatar {
+  position: relative;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid var(--encre);
+  font: 700 26px/1 var(--titre);
+  padding-top: 4px;
+}
+.avatar .accessoire { position: absolute; top: -12px; right: -10px; font-size: 22px; padding: 0; }
+.avatar.grand { width: 96px; height: 96px; font-size: 50px; }
+.avatar.grand .accessoire { font-size: 40px; top: -22px; right: -18px; }
+
+.choix-joueur {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: var(--decoupe);
+  background: #fff;
+  color: var(--encre);
+  box-shadow: 3px 4px 0 rgba(0, 120, 191, .8);
+  font: 700 26px/1.1 var(--titre);
+  text-align: left;
+  cursor: pointer;
+}
+.choix-joueur:active { transform: translate(2px, 3px); }
+
+.choix-joueur:disabled { opacity: .5; cursor: default; transform: none; }
+.choix-joueur .detail { display: block; font: 700 14px/1.2 var(--texte); }
+.choix-joueur.juste { background: var(--juste); color: #fff; }
+.choix-joueur .voix { margin-left: auto; font-size: 20px; }
+
+/* Étiquette de catégorie d'On se connaît (EtiquetteCategorie). */
+.etiquette {
+  display: inline-block;
+  padding: 5px 12px 3px;
+  border-radius: 10px 4px 12px 5px;
+  font: 700 16px/1.2 var(--titre);
+  box-shadow: 2px 3px 0 rgba(29, 43, 79, .25);
+  transform: rotate(-1deg);
+}
+.enonce-long { font-size: 21px; white-space: pre-line; }
+
+/* En-tête du jeu. */
+.entete { display: flex; align-items: center; gap: 10px; min-height: 48px; }
+.entete .nom { flex: 1; font: 700 24px/1.1 var(--titre); }
+.entete .compteur { font-size: 16px; font-weight: 800; }
+
+/* Étiquette de niveau (BoutonNiveau), avec son œillet. */
+.niveau {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px 12px 12px;
+  border: 0;
+  border-radius: var(--decoupe);
+  box-shadow: 3px 4px 0 rgba(255, 72, 176, .8);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.niveau:nth-child(odd) { transform: rotate(-.5deg); }
+.niveau:nth-child(even) { transform: rotate(.4deg); }
+.niveau:active { transform: translate(2px, 3px); }
+.niveau:disabled { opacity: .45; }
+.niveau .oeillet { width: 16px; height: 16px; border-radius: 50%; background: var(--papier); border: 2px solid currentColor; flex: none; }
+.niveau .libelle { flex: 1; font: 700 21px/1.1 var(--titre); }
+.niveau .enjeu { text-align: right; font: 700 19px/1.1 var(--titre); }
+.niveau .enjeu small { display: block; font: 700 13px/1.2 var(--texte); }
+
+/* Chrono. */
+.chrono { display: flex; align-items: center; gap: 10px; }
+.chrono .piste { flex: 1; height: 16px; border-radius: 10px; background: rgba(29, 43, 79, .12); overflow: hidden; }
+.chrono .reste { height: 100%; width: 100%; border-radius: 10px; transform-origin: left center; }
+.chrono .secondes { min-width: 44px; text-align: right; font: 700 22px/1 var(--titre); }
+.chrono-legende { font-size: 14px; text-align: center; margin-top: 4px; }
+
+/* Énoncé et propositions (CarteProposition). */
+.enonce { font: 700 24px/1.2 var(--titre); }
+.propositions { display: grid; gap: 12px; }
+.proposition {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: var(--decoupe);
+  background: #fff;
+  color: var(--encre);
+  box-shadow: 3px 4px 0 rgba(0, 120, 191, .8);
+  font: 700 19px/1.25 var(--texte);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.proposition .lettre {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--encre);
+  font: 700 20px/1 var(--titre);
+  padding-top: 3px;
+}
+.proposition.appuyee { transform: translate(2px, 3px); box-shadow: 1px 1px 0 rgba(0, 120, 191, .8); }
+.proposition.choisie { outline: 4px solid var(--encre); outline-offset: 2px; }
+.proposition.juste { background: var(--juste); color: #fff; }
+.proposition.juste .lettre, .proposition.faux .lettre { border-color: #fff; }
+.proposition.faux { background: var(--faux); color: #fff; }
+.proposition.estompe { opacity: .4; }
+.proposition:disabled { cursor: default; }
+
+.verdict { font: 700 30px/1.1 var(--titre); text-align: center; }
+.verdict.juste { color: var(--juste); }
+.verdict.faux { color: var(--faux); }
+.bulle {
+  position: relative;
+  background: #fff;
+  border-radius: 18px;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 17px;
+  box-shadow: 2px 3px 0 rgba(255, 72, 176, .7);
+}
+
+.jokers { display: flex; gap: 8px; }
+.joker {
+  flex: 1;
+  border: 0;
+  border-radius: 14px;
+  background: #fff;
+  color: var(--encre);
+  padding: 6px 4px;
+  font: 700 15px/1.2 var(--titre);
+  box-shadow: 2px 3px 0 rgba(0, 120, 191, .6);
+  cursor: pointer;
+}
+.joker span { display: block; font-size: 20px; }
+.joker:disabled { opacity: .35; }
+
+/* Classement et podium. */
+.classement { display: grid; gap: 8px; }
+.ligne { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 12px 5px 14px 6px; padding: 8px 12px; box-shadow: 2px 3px 0 rgba(0, 120, 191, .5); }
+.ligne .rang { width: 28px; font: 700 22px/1 var(--titre); text-align: center; }
+.ligne .nom { flex: 1; font: 700 20px/1.1 var(--titre); }
+.ligne .score { font: 700 20px/1 var(--titre); }
+.ligne .avatar { width: 40px; height: 40px; font-size: 20px; }
+.ligne .avatar .accessoire { font-size: 16px; top: -9px; right: -8px; }
+.ligne.moi { outline: 3px solid var(--rose); }
+
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 10px; margin: 28px 0 8px; }
+.marche { flex: 1; max-width: 140px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.marche .socle { width: 100%; border-radius: 10px 4px 0 0; display: grid; place-items: center; font: 700 34px/1 var(--titre); box-shadow: 3px 4px 0 rgba(255, 72, 176, .7); }
+.marche .nom { font: 700 20px/1.1 var(--titre); text-align: center; word-break: break-word; }
+.marche .score { font-size: 15px; }
+
+.attente { text-align: center; padding: 8px 0; }
+.points-attente::after { content: '…'; animation: points 1.2s steps(4) infinite; display: inline-block; width: 1.2em; text-align: left; overflow: hidden; vertical-align: bottom; }
+@keyframes points { from { width: 0; } to { width: 1.2em; } }
+
+/* Un choix qui vient d'apparaître ignore les touchers (GardeToucher). */
+.garde { pointer-events: none; }
+
+.erreur { color: var(--faux); text-align: center; }
+.pied { text-align: center; font-size: 13px; margin-top: 28px; opacity: .7; }
+.pied a { color: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  .points-attente::after { animation: none; }
+  .bouton, .proposition { transition: none; }
+}
