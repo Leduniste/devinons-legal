@@ -7,6 +7,12 @@
 // ?scene=choix|question|rallonge|correction|attente|miParcours|podium fige
 // la partie sur un écran (captures, essais de mise en page).
 //
+// &long=1 : énoncé et propositions les plus longs (essais de mise en page).
+//
+// &hote=0181 imite un téléphone en 0.1.8.1 (protocole 1 : ni règles
+// chiffrées, ni petite phrase, ni « bonjour ») ; &lent=1 : personne ne
+// touche « Suivant » sur le téléphone qui mène.
+//
 // ?demo=connait : une partie On se connaît (lib/features/on_se_connait/
 // partage_connait.dart), où Mamie Jo répond sur le téléphone de la tablée
 // et Tom sur le sien ; ?scene=qui|secret|gardes|devinette|revelation|podium.
@@ -188,8 +194,19 @@ const JOUEURS = [
 const QUESTIONS_PAR_JOUEUR = 2;
 const demi = (v) => Math.round(v * 2) / 2;
 
+// Pire cas pour la mise en page : l'énoncé le plus long de assets/questions
+// et les propositions les plus longues (essais de la télé, &long=1).
+const QUESTION_LONGUE = {
+  question: 'Comment appelle-t-on la technique vocale consistant à chanter deux notes simultanément, pratiquée notamment par les chanteurs mongols ?',
+  propositions: ['Service municipal d\'information citoyenne', 'Système monétaire international commun', 'Société mutuelle d\'investissement collectif', 'Salaire minimum interprofessionnel de croissance'],
+  bonne_reponse_index: 3,
+};
+
 export function connexionDemo({ scene = null, jeu = null } = {}) {
   if (jeu === 'connait') return connexionDemoConnait({ scene });
+  const options = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
+  const ancien = options.get('hote') === '0181';
+  const lent = options.has('lent');
   const ecouteurs = new Set();
   const s = {
     etape: 'choixNiveau', tour: 0, niveau: null, surprise: false, question: null, reponses: [], rallonge: false,
@@ -206,7 +223,7 @@ export function connexionDemo({ scene = null, jeu = null } = {}) {
     const [gain, perte] = s.niveau ? BAREME[s.niveau] : [0, 0];
     const r = s.reponses[s.reponses.length - 1];
     const phrases = r && r.correcte ? PHRASES_JUSTE : PHRASES_FAUX;
-    return JSON.parse(JSON.stringify({
+    const publie = JSON.parse(JSON.stringify({
       protocole: 2, hote: 'demo', joueurs: JOUEURS, style: 'eclair', questionsParJoueur: QUESTIONS_PAR_JOUEUR, vitesse: 'balade',
       etape: s.etape, tour: s.tour, niveau: s.niveau, surprise: s.surprise, question: s.question,
       reponses: s.reponses, rallonge: s.rallonge, jokers: ['cinquante', 'temps'], jokersJoues: s.joues,
@@ -217,6 +234,10 @@ export function connexionDemo({ scene = null, jeu = null } = {}) {
       ...(enCours ? { dureeChronoMs: duree(), dureeRallongeMs: Math.ceil(CHRONOS[s.niveau] / 2) * 1000, prixRallonge: demi(gain / 2), gainEnJeu: gain, perteEnJeu: perte } : {}),
       ...(s.etape === 'correction' && r ? { taquinerie: phrases[s.reponses.length % phrases.length].replace('{nom}', courant().nom) } : {}),
     }));
+    if (ancien) {
+      for (const champ of ['protocole', 'enjeux', 'delaiDecisionMs', 'dureeChronoMs', 'dureeRallongeMs', 'prixRallonge', 'gainEnJeu', 'perteEnJeu', 'taquinerie']) delete publie[champ];
+    }
+    return publie;
   }
 
   function publier() {
@@ -303,7 +324,7 @@ export function connexionDemo({ scene = null, jeu = null } = {}) {
     else if (s.etape === 'question' && !moi && !s.rallonge) {
       const bonne = s.question.bonne_reponse_index;
       quand(3500, () => enregistrer(s.tour % 3 === 2 ? (bonne + 1) % 4 : bonne));
-    } else if (s.etape === 'correction' && !moi) quand(3500, suivant);
+    } else if (s.etape === 'correction' && !moi && !lent) quand(3500, suivant);
     else if (s.etape === 'miParcours') quand(4000, () => { s.etape = 'choixNiveau'; publier(); });
   }
 
@@ -318,6 +339,8 @@ export function connexionDemo({ scene = null, jeu = null } = {}) {
     if (nom === 'attente') { choisirNiveau('pilierDeTable'); s.debut = Date.now() - 6000; return; }
     choisirNiveau('petitMalin');
     s.question = { id: 'demo', niveau: 'petitMalin', domaine: '', ...QUESTIONS.petitMalin[2] };
+    // &long=1 : le pire cas des fichiers de questions (énoncé et propositions les plus longs).
+    if (options.has('long')) s.question = { id: 'demo-long', niveau: 'petitMalin', domaine: '', ...QUESTION_LONGUE };
     s.debut = Date.now() - 7000;
     if (nom === 'rallonge') { s.etape = 'tempsEcoule'; s.decision = Date.now() - 2000; }
     if (nom === 'correction') { s.debut = Date.now() - 4000; enregistrer(s.question.bonne_reponse_index); }
@@ -341,7 +364,7 @@ const QUESTIONS_CONNAIT = [
   { id: 'd1', categorie: 'devineMaReponse', secret: 'Ton dessert préféré ?', devinette: 'Le dessert préféré de {nom} ?', propositions: ['La mousse au chocolat', 'La tarte aux pommes', 'Les crêpes', 'La glace'], heros: 'mamie' },
   { id: 'q1', categorie: 'quiARepondu', secret: 'Le super-pouvoir que tu choisirais ?', propositions: ['Voler', 'Être invisible', 'Parler aux animaux', 'Arrêter le temps'] },
   { id: 'd2', categorie: 'devineMaReponse', secret: 'Où partirais-tu demain ?', devinette: 'Où {nom} partirait-elle demain ?', propositions: ['À la mer', 'À la montagne', 'Au Japon', 'Chez mamie'], heros: 'lea' },
-  { id: 'v1', categorie: 'plusSusceptible', secret: 'Qui est le plus susceptible de rire à un enterrement ?', propositions: [] },
+  { id: 'v1', categorie: 'plusSusceptible', secret: 'Qui est le plus susceptible de danser sous la pluie ?', propositions: [] },
   { id: 'd3', categorie: 'devineMaReponse', secret: 'Ton animal préféré ?', devinette: 'L\'animal préféré de {nom} ?', propositions: ['Le chat', 'Le dauphin', 'Le loup', 'Le hibou'], heros: 'tom' },
   { id: 's1', categorie: 'souvenirs', secret: 'Qui a déjà oublié quelqu\'un sur une aire d\'autoroute ?', propositions: [] },
 ];

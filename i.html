@@ -1,0 +1,186 @@
+<!doctype html>
+<!--
+  Page d'accueil des invitations de Devinons : l'adresse du QR code et du
+  lien imprimés sur les images partagées (podium, solo, Défi du jour,
+  photos Winner / Loser, paliers).
+
+  À publier dans le dépôt devinons-legal, à côté de partie.html :
+    https://leduniste.github.io/devinons-legal/i.html
+    puis https://devinons.fr/i.html une fois le domaine branché (CNAME).
+  (GitHub Pages sert aussi la forme courte .../i, celle qu'on lit sur les
+  images.) Liens relatifs seulement : la page marche aux deux adresses.
+
+  - Android : direction Google Play tout de suite. Le paramètre ?d=podium
+    (origine de l'image, rien d'autre) devient la campagne UTM de la fiche,
+    et &via=texte (lien du message plutôt que l'image) le support :
+    visible dans Play Console → Acquisition (« campagnes UTM »).
+  - iPhone, iPad, ordinateur : « bientôt sur iPhone » et, en attendant, la
+    partie dans le navigateur (partie.html, saisie du code de la partie
+    menée sur un téléphone Android).
+  Aucun cookie, aucun traceur, aucune bibliothèque externe hors polices.
+-->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Devinons · le quiz en famille</title>
+<meta name="description" content="Devinons, le quiz en famille dès 4 ans : sur Google Play, et bientôt sur iPhone. En attendant, rejoins une partie dans le navigateur.">
+<meta name="theme-color" content="#F7F1E3">
+<meta property="og:title" content="Devinons · le quiz en famille">
+<meta property="og:description" content="Des devinettes pour toute la famille, dès 4 ans. Viens jouer avec nous !">
+<meta name="referrer" content="no-referrer">
+<script>
+  // Avant tout affichage : Android part directement sur Google Play.
+  (function () {
+    var ua = navigator.userAgent || '';
+    var d = (new URLSearchParams(location.search).get('d') || '').toLowerCase();
+    if (!/^[a-z]{1,12}$/.test(d)) d = 'lien';
+    // via=texte : lien du message ; sinon QR code ou adresse lue sur l'image.
+    var via = new URLSearchParams(location.search).get('via') === 'texte' ? 'texte' : 'image';
+    var referrer = 'utm_source=invitation&utm_medium=' + via + '&utm_campaign=' + d;
+    window.lienPlay = 'https://play.google.com/store/apps/details?id=com.leduniste.devinons&referrer=' +
+      encodeURIComponent(referrer);
+    window.appareil = /Android/i.test(ua) ? 'android'
+      : /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'iphone'
+      : 'ordinateur';
+    if (window.appareil === 'android') location.replace(window.lienPlay);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Gluten:wght@800&display=swap">
+<style>
+  /* Mêmes encres que l'appli (lib/core/theme/app_colors.dart). */
+  :root {
+    --papier: #F7F1E3;
+    --encre: #1D2B4F;
+    --rose: #FF48B0;
+    --bleu: #0078BF;
+    --jaune: #FFE800;
+    --vert: #00A95C;
+    --titre: 'Gluten', 'Comic Sans MS', 'Chalkboard SE', cursive;
+    --texte: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --decoupe: 16px 6px 18px 8px / 8px 16px 6px 18px;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--papier);
+    color: var(--encre);
+    font: 700 17px/1.45 var(--texte);
+    overflow-x: hidden;
+  }
+  /* Deux taches de trame riso : rose en haut à droite, jaune en bas à gauche. */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    z-index: -1;
+    width: 70vmin;
+    height: 70vmin;
+    border-radius: 50%;
+    pointer-events: none;
+    -webkit-mask-image: radial-gradient(circle, #000 35%, transparent 70%);
+    mask-image: radial-gradient(circle, #000 35%, transparent 70%);
+  }
+  body::before { top: -22vmin; right: -22vmin; opacity: .55;
+    background: radial-gradient(circle, var(--rose) 1.6px, transparent 2px) 0 0 / 8px 8px; }
+  body::after { bottom: -24vmin; left: -24vmin; opacity: .6;
+    background: radial-gradient(circle, #F2C500 1.8px, transparent 2.2px) 0 0 / 8px 8px; }
+
+  main {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: max(24px, env(safe-area-inset-top)) 16px max(32px, env(safe-area-inset-bottom));
+  }
+  .logo {
+    font: 800 46px/1 var(--titre);
+    text-align: center;
+    margin: 8px 0 4px;
+    letter-spacing: .5px;
+  }
+  .logo span:nth-child(4n+1) { color: var(--rose); }
+  .logo span:nth-child(4n+2) { color: var(--bleu); }
+  .logo span:nth-child(4n+3) { color: #E0B800; }
+  .logo span:nth-child(4n+4) { color: var(--vert); }
+  h1 { font: 800 30px/1.1 var(--titre); text-align: center; margin: 18px 0 6px; }
+  h2 { font: 800 22px/1.15 var(--titre); margin: 0 0 6px; }
+  p { margin: 0 0 10px; }
+  .centre { text-align: center; }
+  .carte {
+    position: relative;
+    background: #fff;
+    border-radius: var(--decoupe);
+    padding: 18px 18px 16px;
+    margin: 18px 4px;
+    box-shadow: 4px 5px 0 rgba(29, 43, 79, .85);
+    transform: rotate(-.6deg);
+  }
+  .carte.jaune { background: var(--jaune); transform: rotate(.5deg); }
+  .bouton {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    color: var(--encre);
+    background: #fff;
+    font: 800 19px/1.2 var(--titre);
+    padding: 14px 16px;
+    margin-top: 12px;
+    border-radius: var(--decoupe);
+    box-shadow: 3px 4px 0 var(--encre);
+  }
+  .bouton.jaune { background: var(--jaune); }
+  .bouton.rose { background: var(--rose); color: #fff; }
+  .bouton:active { transform: translate(2px, 3px); box-shadow: 1px 1px 0 var(--encre); }
+  .petit { font-size: 14px; font-weight: 400; }
+  .masque { display: none; }
+  [data-appareil="android"] .pour-android,
+  [data-appareil="iphone"] .pour-iphone,
+  [data-appareil="ordinateur"] .pour-ordinateur { display: block; }
+</style>
+</head>
+<body>
+<main>
+  <div class="logo" aria-label="Devinons"><span>D</span><span>e</span><span>v</span><span>i</span><span>n</span><span>o</span><span>n</span><span>s</span></div>
+  <p class="centre">Le quiz en famille, dès 4 ans</p>
+
+  <h1>On t'invite à jouer !</h1>
+  <p class="centre">Des devinettes pour les petits, les grands et les grands-parents, sur un seul téléphone ou à plusieurs.</p>
+
+  <!-- Android : la redirection est déjà partie ; le bouton reste au cas où. -->
+  <div class="masque pour-android">
+    <p class="centre petit">On t'emmène sur Google Play…</p>
+  </div>
+
+  <div class="carte jaune masque pour-iphone">
+    <h2>Bientôt sur iPhone 🍏</h2>
+    <p>Devinons arrive bientôt sur iPhone. En attendant, joue avec ta famille dans le navigateur&nbsp;: quand
+      quelqu'un lance une partie Tour à tour sur Android, il touche le bouton QR code et tu rejoins la partie ici,
+      sans rien installer.</p>
+    <a class="bouton" href="partie.html">Rejoindre une partie</a>
+  </div>
+
+  <div class="carte masque pour-ordinateur">
+    <h2>Devinons se joue sur téléphone 📱</h2>
+    <p>Installe Devinons sur un téléphone Android. Sur iPhone, il arrive bientôt&nbsp;; en attendant, on peut
+      rejoindre une partie dans le navigateur, ici ou sur l'iPhone.</p>
+    <a class="bouton" href="partie.html">Rejoindre une partie</a>
+  </div>
+
+  <div class="carte">
+    <h2>Sur Android</h2>
+    <p class="petit">Gratuit, sans compte ni e-mail.</p>
+    <a class="bouton jaune" id="play" href="https://play.google.com/store/apps/details?id=com.leduniste.devinons">Installer Devinons sur Google Play</a>
+  </div>
+
+  <p class="centre petit"><a href="confidentialite.html" style="color:inherit">Confidentialité</a></p>
+</main>
+<script>
+  document.body.setAttribute('data-appareil', window.appareil);
+  document.getElementById('play').href = window.lienPlay;
+</script>
+</body>
+</html>

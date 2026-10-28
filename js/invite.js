@@ -14,9 +14,11 @@
 import { config, configuree } from './config.js';
 import {
   ATTENTE_DOIGT_MS, GARDE_TOUCHER_MS, GRACE_MS, JOKERS, LETTRES, NIVEAUX,
-  codeDepuis, dureeAffichee, ecouleA, enjeu, formatPoints, lirePartie, texteSur, verdict,
+  codeDepuis, dureeAffichee, ecouleA, enjeu, formatPoints, libellePoints, lirePartie, texteSur, verdict,
 } from './etat.js';
-import { avatar, garderEcranAllume, h, lignesClassement as classementDe, logo, podium } from './dessin.js';
+import {
+  AIDE_CONNAIT, AIDE_TOUR_A_TOUR, aide, avatar, garderEcranAllume, h, installerBoutonAide, lignesClassement as classementDe, logo, podium,
+} from './dessin.js';
 import { estConnait } from './connait.js';
 import { inviteConnait } from './invite_connait.js';
 
@@ -40,7 +42,7 @@ let connait = null; // partie On se connaît
 
 // --- Petits outils -------------------------------------------------------
 
-const afficher = (...noeuds) => app.replaceChildren(...noeuds.flat().filter((n) => n !== null && n !== undefined && n !== false));
+const afficher = (...noeuds) => app.replaceChildren(...noeuds.flat(Infinity).filter((n) => n !== null && n !== undefined && n !== false));
 
 function memoire(cle, valeur) {
   try {
@@ -50,10 +52,25 @@ function memoire(cle, valeur) {
   return null;
 }
 
-const piedInstaller = () => h('p', { class: 'pied' },
-  'Devinons, le quiz en famille. ',
-  h('a', { href: config.playStore }, 'L\'appli Android'), ' · ',
-  h('a', { href: 'https://leduniste.github.io/devinons-legal/' }, 'Confidentialité'));
+const piedInstaller = () => [
+  lienTele(),
+  h('p', { class: 'pied' },
+    'Devinons, le quiz en famille. ',
+    h('a', { href: config.playStore }, 'L\'appli Android'), ' · ',
+    h('a', { href: 'https://leduniste.github.io/devinons-legal/' }, 'Confidentialité')),
+];
+
+// Lien discret vers l'écran de suivi (ecran.html) : la télé regarde,
+// les téléphones jouent.
+function lienTele() {
+  const adresse = config.pageJoueur.replace(/partie\.html$/, 'ecran.html');
+  return h('details', { class: 'lien-tele' },
+    h('summary', null, '📺 Afficher la partie sur une télé ou un ordinateur'),
+    h('p', null, 'Sur la télé ou l\'ordinateur, ouvre ',
+      h('strong', null, adresse.replace('https://', '')),
+      code ? [' et tape le code ', h('strong', null, code)] : ' et tape le code de la partie',
+      '. La partie s\'affiche en grand, juste pour regarder : on joue toujours sur les téléphones.'));
+}
 
 // --- Écrans hors partie ------------------------------------------------------
 
@@ -138,6 +155,7 @@ async function rejoindre(lu) {
 }
 
 function recevoir(etat) {
+  if (etat) installerBoutonAide(connait || estConnait(etat) ? AIDE_CONNAIT : AIDE_TOUR_A_TOUR);
   if (connait || estConnait(etat)) {
     connait ??= inviteConnait({
       afficher, code, uid: connexion.uid, memoire, ecranMessage, boutonAutrePartie, piedInstaller, carteInstaller,
@@ -204,6 +222,7 @@ const cEstMoi = () => vue.joueurCourant.id === moi || jouerPour === vue.tour;
 function ecranQui() {
   afficher(
     logo(),
+    aide(AIDE_TOUR_A_TOUR),
     h('h1', { class: 'centre', style: { fontSize: '34px' } }, 'Qui es-tu ?'),
     h('p', { class: 'centre' }, 'Touche ton prénom : tu joueras tes tours depuis ce téléphone.'),
     h('div', { class: 'pile' },
@@ -249,25 +268,63 @@ function entete() {
   return h('div', { class: 'entete' },
     avatar(j),
     h('span', { class: 'nom' }, j.nom),
+    !cEstMoi() ? h('span', { class: 'en-direct' }, 'En direct') : null,
     h('span', { class: 'compteur' }, `${vue.numeroQuestion} / ${vue.questionsParJoueur}`));
+}
+
+// Niveau choisi, sur sa couleur : « Petit malin · +12 / −6 ».
+function etiquetteNiveau() {
+  if (!vue.niveau) return null;
+  const e = vue.enjeux[vue.niveau.id];
+  return h('p', { class: 'centre' }, h('span', { class: 'etiquette', style: { background: vue.niveau.couleur, color: texteSur(vue.niveau.couleur) } },
+    `${vue.surprise ? '🎲 ' : ''}${vue.niveau.libelle} · ${vue.surprise ? `+${vue.gainEnJeu} / −${vue.perteEnJeu}` : enjeu(e)}`));
+}
+
+// Tours avant que [id] joue, en comptant depuis [tour] (0 : c'est à lui).
+function toursAvant(id, tour) {
+  const n = vue.joueurs.length;
+  const i = vue.joueurs.findIndex((j) => j.id === id);
+  return i < 0 ? -1 : (i - (tour % n) + n) % n;
+}
+
+// « Tu joues juste après ! », pour patienter en sachant quand.
+function prochainTour() {
+  if (!vue.joueurs.some((j) => j.id === moi)) return null;
+  const k = toursAvant(moi, vue.tour);
+  if (k <= 0) return null;
+  const restants = vue.nombreTours - vue.tour;
+  if (k >= restants) return h('p', { class: 'centre petit' }, 'Tu as joué toutes tes questions : place au suspense !');
+  return h('p', { class: 'centre prochain' }, k === 1 ? 'Tu joues juste après !' : `Ton tour dans ${k} questions`);
+}
+
+// Dernière réponse donnée, pour qui vient de regarder ailleurs.
+function derniereReponseEnBref() {
+  const r = vue.derniereReponse;
+  if (!r) return null;
+  const j = vue.joueurs.find((x) => x.id === r.joueurId);
+  return j ? h('p', { class: 'centre petit discret' }, `Dernière réponse : ${j.nom}, ${verdict(r)}`) : null;
 }
 
 const lignesClassement = (lignes) => classementDe(lignes, moi);
 
 function ecranChoixNiveau() {
   const j = vue.joueurCourant;
-  const score = `Question ${vue.numeroQuestion} / ${vue.questionsParJoueur}  •  ${formatPoints(vue.scorePour(j.id))} pts`;
+  const score = `Question ${vue.numeroQuestion} / ${vue.questionsParJoueur}  •  ${libellePoints(vue.scorePour(j.id))}`;
   if (!cEstMoi()) {
+    // En direct : qui joue, son score, quand vient mon tour, le classement.
     return [
       h('div', { class: 'attente pile' },
-        h('p', null, 'C\'est au tour de'),
+        h('span', { class: 'en-direct' }, 'En direct'),
         avatar(j, true),
         h('h1', null, j.nom),
         h('p', null, score),
         h('p', { class: 'points-attente' }, `${j.nom} choisit son niveau`)),
+      prochainTour(),
+      derniereReponseEnBref(),
       h('div', { class: 'espace' }),
       vue.reponses.length ? lignesClassement(vue.classement) : null,
       h('button', { class: 'bouton lien', onclick: () => { jouerPour = vue.tour; rendre(); } }, `Jouer à la place de ${j.nom}`),
+      lienTele(),
     ];
   }
   const attente = envoye && envoye.action === 'niveau';
@@ -340,7 +397,8 @@ function ecranQuestion() {
   const attente = envoye !== null;
   const noeuds = [entete()];
 
-  if (vue.surprise) noeuds.push(h('p', { class: 'centre petit' }, `🎲 Niveau surprise : +${vue.gainEnJeu} si c'est juste, −${vue.perteEnJeu} sinon`));
+  noeuds.push(etiquetteNiveau());
+  if (vue.surprise && joue) noeuds.push(h('p', { class: 'centre petit' }, `🎲 Niveau surprise : +${vue.gainEnJeu} si c'est juste, −${vue.perteEnJeu} sinon`));
   noeuds.push(...chrono(correction || vue.appel));
 
   if (!correction && !tempsEcoule && joue && vue.jokers.length) {
@@ -404,12 +462,19 @@ function ecranQuestion() {
     noeuds.push(h('div', { class: `verdict ${reponse.correcte ? 'juste' : 'faux'}` }, verdict(reponse)));
     if (vue.taquinerie) noeuds.push(h('div', { class: 'bulle', style: { marginTop: '12px' } }, vue.taquinerie));
     noeuds.push(h('div', { class: 'espace' }));
+    // Tout le monde peut passer à la suite (comme sur les téléphones) :
+    // le joueur suivant n'attend pas qu'on touche « Suivant » ailleurs.
+    const suivant = vue.joueurs[(vue.tour + 1) % vue.joueurs.length];
     if (joue) {
       noeuds.push(h('button', { class: 'bouton', disabled: attente, onclick: () => geste('suivant') },
         vue.dernierTour ? 'Voir les résultats' : 'Suivant →'));
+    } else if (!vue.dernierTour && suivant.id === moi) {
+      noeuds.push(h('button', { class: 'bouton jaune', disabled: attente, onclick: () => geste('suivant') }, 'À moi de jouer ! →'));
     } else {
-      noeuds.push(h('p', { class: 'centre points-attente' }, `On attend que ${vue.joueurCourant.nom} passe à la suite`));
+      noeuds.push(h('button', { class: 'bouton blanc', disabled: attente, onclick: () => geste('suivant') },
+        vue.dernierTour ? 'Voir les résultats' : `Au tour de ${suivant.nom} →`));
     }
+    if (!joue) noeuds.push(prochainTour());
   } else if (!joue) {
     noeuds.push(h('p', { class: 'centre petit', style: { marginTop: '16px' } }, `${vue.joueurCourant.nom} réfléchit… chut !`));
   }

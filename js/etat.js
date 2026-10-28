@@ -71,6 +71,11 @@ export const GARDE_TOUCHER_MS = 350;
 const demiPoint = (v) => Math.round(v * 2) / 2;
 
 // Nombre de points à la française : 19, 19,5, −8.
+/** « 1 pt », « 0 pt », « 15,5 pts » : le pluriel à partir de 2. */
+export function libellePoints(v) {
+  return `${formatPoints(v)} pt${Math.abs(v) >= 2 ? 's' : ''}`;
+}
+
 export function formatPoints(points) {
   const texte = Number.isInteger(points) ? String(points) : points.toFixed(1).replace('.', ',');
   return texte.replace('-', '−');

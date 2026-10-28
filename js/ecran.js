@@ -4,8 +4,8 @@
 // n'envoie aucun geste.
 
 import { config, configuree } from './config.js';
-import { LETTRES, codeDepuis, dureeAffichee, ecouleA, formatPoints, lirePartie, texteSur, verdict } from './etat.js';
-import { avatar, garderEcranAllume, h, lignesClassement, logo, podium } from './dessin.js';
+import { LETTRES, codeDepuis, dureeAffichee, ecouleA, formatPoints, libellePoints, lirePartie, texteSur, verdict } from './etat.js';
+import { AIDE_TELE, AIDE_TELE_CONNAIT, avatar, garderEcranAllume, h, lignesClassement, logo, podium } from './dessin.js';
 import { CATEGORIES, estConnait, lireConnait, restants } from './connait.js';
 
 const params = new URLSearchParams(location.search);
@@ -18,7 +18,40 @@ let recuA = 0;
 let qr = null;
 let connait = null; // partie On se connaît
 
-const afficher = (...noeuds) => app.replaceChildren(...noeuds.flat().filter((n) => n !== null && n !== undefined && n !== false));
+const afficher = (...noeuds) => {
+  app.replaceChildren(...noeuds.flat(Infinity).filter((n) => n !== null && n !== undefined && n !== false));
+  ajuster();
+};
+
+// Tout doit tenir dans la fenêtre, même avec la plus longue question et les
+// plus longues réponses : on réduit la scène (variable CSS --reduction,
+// lue par ecran.css) jusqu'à ce que plus rien ne dépasse. Le bandeau et
+// l'aide gardent leur taille.
+function depasse(zone) {
+  const z = zone.getBoundingClientRect();
+  const t = 1.5; // tolérance d'arrondi
+  if (zone.scrollWidth > zone.clientWidth + t || zone.scrollHeight > zone.clientHeight + t) return true;
+  for (const el of zone.querySelectorAll('*')) {
+    const r = el.getBoundingClientRect();
+    if (!r.width && !r.height) continue;
+    if (r.left < z.left - t || r.right > z.right + t || r.top < z.top - t || r.bottom > z.bottom + t) return true;
+  }
+  return false;
+}
+
+function ajuster() {
+  const zone = app.querySelector('.tele-scene') || app.querySelector(':scope > .tele-centre');
+  if (!zone) return;
+  const pile = document.body;
+  let reduction = 1;
+  pile.style.setProperty('--reduction', reduction);
+  while (depasse(zone) && reduction > 0.3) {
+    reduction = Math.round((reduction - 0.04) * 100) / 100;
+    pile.style.setProperty('--reduction', reduction);
+  }
+}
+window.addEventListener('resize', ajuster);
+document.fonts?.ready.then(ajuster);
 
 function ecranCode(erreur) {
   const champ = h('input', {
@@ -27,8 +60,9 @@ function ecranCode(erreur) {
   });
   afficher(h('div', { class: 'tele-centre' },
     logo(),
-    h('h1', null, 'Afficher une partie sur la télé'),
-    h('p', null, 'Saisis le code de la partie, affiché sur le téléphone qui la mène (bouton QR code, puis « Afficher sur la télé »).'),
+    h('h1', null, '📺 Écran de suivi'),
+    h('p', null, 'Ici, la partie s\'affiche en grand, juste pour regarder. Pour jouer, chacun scanne le QR code avec son téléphone.'),
+    h('p', null, 'Tape le code de la partie : sur le téléphone qui la mène, bouton QR code, puis « Suivre sur la télé ».'),
     h('form', {
       class: 'tele-formulaire',
       onsubmit: (e) => {
@@ -108,7 +142,10 @@ function chargerQr() {
 function blocRejoindre() {
   return h('div', { class: 'tele-rejoindre' },
     qr ? h('img', { src: qr, alt: '' }) : null,
-    h('div', null, h('div', { class: 'petit' }, 'Pour jouer : scanne, ou code'), h('div', { class: 'tele-code' }, code)));
+    h('div', null,
+      h('div', { class: 'tele-suivi' }, '📺 Écran de suivi'),
+      h('div', { class: 'petit' }, 'Pour jouer, scanne avec un téléphone'),
+      h('div', { class: 'tele-code' }, code)));
 }
 
 function bandeau() {
@@ -130,7 +167,10 @@ function rendre() {
     miParcours: ecranMiParcours,
     terminee: ecranFin,
   }[vue.etape];
-  if (contenu) afficher(bandeau(), h('section', { class: `tele-scene tele-${vue.etape}` }, contenu()));
+  if (contenu) {
+    afficher(bandeau(), h('section', { class: `tele-scene tele-${vue.etape}` }, contenu()),
+      vue.etape !== 'terminee' ? h('footer', { class: 'tele-aide' }, AIDE_TELE) : null);
+  }
 }
 
 function ecranTour() {
@@ -140,7 +180,7 @@ function ecranTour() {
       h('p', null, 'Au tour de'),
       avatar(j, true),
       h('h1', null, j.nom),
-      h('p', null, `${formatPoints(vue.scorePour(j.id))} pts`),
+      h('p', null, libellePoints(vue.scorePour(j.id))),
       h('p', { class: 'points-attente tele-discret' }, 'Choix du niveau')),
     vue.joueurs.length > 1 ? h('div', { class: 'tele-cote' }, lignesClassement(vue.classement)) : null,
   ];
@@ -227,7 +267,8 @@ function rendreConnait() {
   const contenu = c.etape === 'terminee' ? finConnait() : c.manche ? mancheConnait() : c.phaseSecrets ? secretsConnait() : [];
   afficher(
     h('header', { class: 'tele-bandeau' }, logo(), h('div', { class: 'tele-compteur' }, titre), c.etape === 'terminee' ? h('div') : blocRejoindre()),
-    h('section', { class: `tele-scene tele-connait-${c.manche ? 'manche' : c.etape}` }, contenu));
+    h('section', { class: `tele-scene tele-connait-${c.manche ? 'manche' : c.etape}` }, contenu),
+    c.etape !== 'terminee' ? h('footer', { class: 'tele-aide' }, AIDE_TELE_CONNAIT) : null);
 }
 
 function secretsConnait() {
@@ -235,7 +276,7 @@ function secretsConnait() {
   return [
     h('div', { class: 'tele-centre' },
       h('h1', null, 'Chut, les secrets arrivent…'),
-      h('p', null, 'Chacun répond en cachette, sur son téléphone ou sur celui de la tablée. Scannez le QR code pour répondre sur le vôtre.'),
+      h('p', null, 'Chacun répond en cachette, sur son téléphone ou sur celui de la tablée. Scanne le QR code pour répondre sur le tien.'),
       h('div', { class: 'tele-secrets' }, c.joueurs.filter((j) => (c.secrets[j.id] || []).length).map((j) => {
         const fini = restants(c, j.id).length === 0;
         return h('div', { class: `ligne${fini ? ' fini' : ''}` }, avatar(j), h('span', { class: 'nom' }, j.nom),

@@ -8,9 +8,9 @@
 //   secret  (joueurId, tour: question, valeur: choix)
 //   rendre  (joueurId)                       il finira sur le téléphone de la tablée
 
-import { GARDE_TOUCHER_MS, LETTRES, formatPoints, formatPointsSigne } from './etat.js';
+import { GARDE_TOUCHER_MS, LETTRES, formatPoints, formatPointsSigne, libellePoints } from './etat.js';
 import { CATEGORIES, avancement, lireConnait, occupation, restants, voteSurJoueurs } from './connait.js';
-import { avatar, garderEcranAllume, h, lignesClassement, logo, podium } from './dessin.js';
+import { AIDE_CONNAIT, aide, avatar, garderEcranAllume, h, lignesClassement, logo, podium } from './dessin.js';
 
 export function inviteConnait({ afficher, envoyer, uid, code, memoire, ecranMessage, boutonAutrePartie, piedInstaller, carteInstaller }) {
   let vue = null;
@@ -127,6 +127,7 @@ export function inviteConnait({ afficher, envoyer, uid, code, memoire, ecranMess
     return [
       logo(),
       phase('Phase 1 · Les secrets'),
+      aide(AIDE_CONNAIT),
       h('h1', { class: 'centre', style: { fontSize: '36px' } }, 'Qui es-tu ?'),
       h('p', { class: 'centre' }, 'Touche ton prénom : tu réponds à tes secrets sur ce téléphone, en cachette, pendant que les autres répondent sur le leur.'),
       message ? h('p', { class: 'centre', role: 'alert' }, message) : null,
@@ -232,7 +233,7 @@ export function inviteConnait({ afficher, envoyer, uid, code, memoire, ecranMess
       h('h1', { class: 'centre' }, `Bravo ${premiers.join(' et ')} !`),
       podium(lignes),
       lignes.length > 3 ? lignesClassement(lignes.slice(3), moi) : null,
-      moiLigne ? h('p', { class: 'centre' }, `Toi, ${moiLigne.joueur.nom} : ${formatPoints(moiLigne.score)} pts, ${moiLigne.bonnes} bonne${moiLigne.bonnes > 1 ? 's' : ''} devinette${moiLigne.bonnes > 1 ? 's' : ''} sur ${moiLigne.jouees}.`) : null,
+      moiLigne ? h('p', { class: 'centre' }, `Toi, ${moiLigne.joueur.nom} : ${libellePoints(moiLigne.score)}, ${moiLigne.bonnes} bonne${moiLigne.bonnes > 1 ? 's' : ''} devinette${moiLigne.bonnes > 1 ? 's' : ''} sur ${moiLigne.jouees}.`) : null,
       h('div', { class: 'espace' }),
       carteInstaller(),
       piedInstaller(),
