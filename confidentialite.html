@@ -53,7 +53,7 @@
 <body>
 <main>
   <h1>Politique de confidentialité de Devinons</h1>
-  <p class="date">Dernière mise à jour : 5 novembre 2026 (fréquence des publicités)</p>
+  <p class="date">Dernière mise à jour : 5 novembre 2026 (joueur solo, âge de jeu, suivi des plantages, Devinons+)</p>
 
   <p>Devinons est un jeu de devinettes en famille ou entre amis, dès 4 ans, édité par
   <strong>Leduniste</strong> (contact : <a href="mailto:contactdevinons@gmail.com">contactdevinons@gmail.com</a>).
@@ -64,7 +64,7 @@
     <ul>
       <li>Pas de compte à créer : ni adresse e-mail, ni numéro de téléphone, ni mot de passe.</li>
       <li>Seuls les prénoms ou surnoms que vous choisissez pour les joueurs, et leurs scores, sont partagés entre les téléphones de votre groupe.</li>
-      <li>Aucune localisation, aucun contact, aucune photo, aucun enregistrement audio. L'appareil photo ne sert qu'à lire le QR code d'une partie, si vous le choisissez : aucune image n'est enregistrée.</li>
+      <li>Aucune localisation précise, aucun contact, aucun enregistrement audio. L'appareil photo ne sert qu'à lire le QR code d'une partie ou à prendre un selfie pour une image souvenir, si vous le choisissez : la photo reste sur votre téléphone, elle n'est jamais envoyée à l'éditeur.</li>
       <li>Les publicités sont réglées pour un public familial : jamais personnalisées.</li>
       <li>Aucune donnée n'est vendue.</li>
     </ul>
@@ -119,6 +119,26 @@
       <td>Afficher les publicités et en mesurer l'affichage.</td>
       <td>Serveurs de Google.</td>
     </tr>
+    <tr>
+      <td><strong>Joueur en solo</strong> : pseudo (vérifié par l'application pour écarter les mots inappropriés), code joueur, scores et records, progression (étoiles, objets du Bazar, étapes de la carte des mondes et torches), Défi du jour.</td>
+      <td>Jouer seul, retrouver son joueur sur un autre téléphone avec son code, et afficher les classements solo (seul le pseudo y apparaît).</td>
+      <td>Serveurs Firebase, avec l'identifiant anonyme du téléphone.</td>
+    </tr>
+    <tr>
+      <td><strong>Âge de jeu d'un joueur en solo</strong> : une catégorie choisie par la famille (Enfant, Ado ou Adulte), jamais une date de naissance ni un âge en années, avec l'heure du premier choix, les jours de jeu (15 au plus) et les modes débloqués.</td>
+      <td>Proposer en solo des niveaux adaptés et débloquer la Survie et l'Échelle en jouant.</td>
+      <td>Serveurs Firebase, avec le pseudo et les records du joueur.</td>
+    </tr>
+    <tr>
+      <td><strong>Suivi des plantages</strong> (Firebase Crashlytics, Google) : si l'appli plante, un rapport technique est envoyé : la nature de l'erreur, le modèle du téléphone, la version d'Android et de Devinons, l'écran et le mode de jeu ouverts à ce moment-là, et un identifiant technique aléatoire propre à l'installation, qui sert seulement à compter les appareils touchés. Ce rapport ne contient ni prénom, ni pseudo, ni réponse, ni photo, ni identifiant publicitaire.</td>
+      <td>Corriger rapidement les problèmes. Jamais utilisé pour la publicité.</td>
+      <td>Serveurs de Google, chiffrés, conservés 90 jours puis supprimés.</td>
+    </tr>
+    <tr>
+      <td><strong>Achat Devinons+</strong> (achat unique, sans abonnement, réservé aux parents) : le paiement est entièrement traité par Google Play ; l'application garde seulement sur le téléphone l'information « Devinons+ acheté ».</td>
+      <td>Retirer les publicités et débloquer l'objet exclusif sur ce téléphone, et restaurer l'achat après une réinstallation.</td>
+      <td>Google Play, et uniquement sur votre téléphone. L'éditeur ne reçoit aucune donnée bancaire.</td>
+    </tr>
   </table>
   </div>
 
@@ -130,12 +150,13 @@
 
   <h2>3. Les enfants</h2>
   <p>Devinons s'adresse aux familles, y compris aux enfants dès 4 ans, qui jouent en principe avec un adulte. L'application ne demande aucune information personnelle : un prénom ou un surnom suffit pour chaque joueur, et nous recommandons d'utiliser un surnom pour les enfants. Aucune donnée n'est utilisée pour du profilage ou de la publicité ciblée.</p>
+  <p>En solo, chaque joueur choisit un âge de jeu (Enfant, Ado ou Adulte) : c'est une simple catégorie qui règle la difficulté, jamais une date de naissance. Elle peut être relevée dans l'application ; pour la corriger vers le bas, un adulte écrit à l'éditeur avec le code joueur. L'achat de Devinons+ est protégé par une question pour les parents.</p>
 
   <h2>4. Partage et hébergement</h2>
-  <p>Les données ne sont partagées qu'avec les prestataires techniques de l'application : Google Firebase (authentification anonyme, base de données, notifications) et Google AdMob (publicité). Elles ne sont jamais vendues. Les serveurs de Google peuvent être situés hors de l'Union européenne ; Google encadre ces transferts par les clauses contractuelles types de la Commission européenne.</p>
+  <p>Les données ne sont partagées qu'avec les prestataires techniques de l'application : Google Firebase (authentification anonyme, base de données, notifications, suivi des plantages), Google AdMob (publicité) et Google Play (paiement de Devinons+). Elles ne sont jamais vendues. Les serveurs de Google peuvent être situés hors de l'Union européenne ; Google encadre ces transferts par les clauses contractuelles types de la Commission européenne.</p>
 
   <h2>5. Durée de conservation</h2>
-  <p>Les données d'un groupe sont conservées tant que le groupe existe. Un joueur supprimé dans l'application est effacé des serveurs. Les signalements sont conservés le temps de traiter la question concernée. Le jeton des rappels est effacé dès que vous les coupez, ou quand le téléphone ne peut plus les recevoir (application désinstallée). Les données « Préviens-moi » sont supprimées au plus tard un an après la sortie du mode concerné.</p>
+  <p>Les données d'un groupe sont conservées tant que le groupe existe, et celles d'un joueur en solo tant que son profil existe. Les rapports de plantage sont supprimés après 90 jours. Un joueur supprimé dans l'application est effacé des serveurs. Les signalements sont conservés le temps de traiter la question concernée. Le jeton des rappels est effacé dès que vous les coupez, ou quand le téléphone ne peut plus les recevoir (application désinstallée). Les données « Préviens-moi » sont supprimées au plus tard un an après la sortie du mode concerné.</p>
 
   <h2 id="suppression">6. Supprimer vos données</h2>
   <ul>
@@ -143,6 +164,9 @@
     <li><strong>Un groupe entier</strong> : retirer un groupe du téléphone ne l'efface pas des serveurs, car d'autres téléphones peuvent l'utiliser. Pour supprimer définitivement un groupe et toutes ses données, écrivez à
       <a href="mailto:contactdevinons@gmail.com?subject=Devinons%20-%20suppression%20de%20donn%C3%A9es">contactdevinons@gmail.com</a>
       en indiquant le <strong>code d'invitation</strong> du groupe (écran « Mes groupes »). La suppression est faite sous 30 jours.</li>
+    <li><strong>Un joueur en solo</strong> (ou pour corriger son âge de jeu) : écrivez à
+      <a href="mailto:contactdevinons@gmail.com?subject=Devinons%20-%20joueur%20solo">contactdevinons@gmail.com</a>
+      en indiquant son <strong>code joueur</strong> (fiche du joueur). La demande est traitée sous 30 jours.</li>
     <li><strong>Les réglages</strong> stockés sur le téléphone sont effacés en désinstallant l'application.</li>
   </ul>
 
