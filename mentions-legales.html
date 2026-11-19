@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Devinons – Mentions légales</title>
+<meta name="description" content="Mentions légales du site devinons.fr et de l'application Devinons : éditeur, hébergeur, services utilisés.">
+<style>
+  :root {
+    --papier: #F7F1E3;
+    --encre: #1D2B4F;
+    --rose: #FF48B0;
+    --bleu: #0078BF;
+    --jaune: #FFE800;
+    --carte: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --papier: #14192B; --encre: #EDE7D8; --carte: #1E2540; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--papier);
+    color: var(--encre);
+    font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 4px; }
+  h2 {
+    font-size: 1.3rem;
+    margin: 40px 0 12px;
+    padding-left: 12px;
+    border-left: 6px solid var(--rose);
+  }
+  .date { opacity: .75; margin: 0 0 24px; }
+  .resume {
+    background: var(--carte);
+    border: 2px solid var(--encre);
+    border-radius: 16px;
+    box-shadow: 4px 5px 0 var(--bleu);
+    padding: 16px 20px;
+  }
+  .resume ul { margin: 8px 0 0; padding-left: 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid color-mix(in srgb, var(--encre) 25%, transparent); }
+  th { font-weight: 700; }
+  .tableau { overflow-x: auto; }
+  a { color: var(--bleu); }
+  @media (prefers-color-scheme: dark) { a { color: #6CC3FF; } }
+  code { font-size: .9em; }
+  .repere { background: var(--jaune); color: #1D2B4F; padding: 0 .25em; border-radius: 4px; font-weight: 700; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid color-mix(in srgb, var(--encre) 25%, transparent); font-size: .95rem; }
+  footer a { margin-right: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Mentions légales</h1>
+  <p class="date">Dernière mise à jour : 19 novembre 2026</p>
+
+  <h2>Éditeur</h2>
+  <p>Le site devinons.fr et l'application Devinons sont édités par :</p>
+  <div class="resume">
+    <strong>TS STUDIO</strong>, micro-entreprise (entrepreneur individuel)<br>
+    SIRET : <span class="repere">[SIRET]</span><br>
+    Adresse : 75 rue des Grenadiers, 34400 Villetelle, France<br>
+    Contact : <a href="mailto:contactdevinons@gmail.com">contactdevinons@gmail.com</a>
+  </div>
+
+  <h2>Directeur de la publication</h2>
+  <p>Thibault Soulignac.</p>
+
+  <h2>Hébergement du site</h2>
+  <p>Le site devinons.fr est hébergé par <strong>GitHub, Inc.</strong> (service GitHub Pages), 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis — <a href="https://github.com">github.com</a>.</p>
+
+  <h2>Services utilisés par l'application</h2>
+  <ul>
+    <li><strong>Google Firebase</strong> (authentification anonyme, base de données, fonctions du serveur, notifications, suivi des plantages), fourni par Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irlande. Les fonctions du serveur de Devinons tournent dans la région européenne de Google (europe-west1, Belgique).</li>
+    <li><strong>Google Play</strong> (distribution de l'application et paiement de Devinons+), fourni par Google Ireland Limited (Google Commerce Limited pour les paiements dans l'Espace économique européen).</li>
+    <li><strong>Google AdMob</strong> (publicités, réglées pour un public familial), fourni par Google Ireland Limited.</li>
+  </ul>
+  <p>Le détail des données traitées figure dans la <a href="confidentialite.html">politique de confidentialité</a>.</p>
+
+  <h2>Propriété intellectuelle</h2>
+  <p>Le contenu du site et de l'application (textes, questions, dessins, logos, sons) est protégé. Toute reproduction sans autorisation est interdite. Voir les <a href="conditions.html">conditions d'utilisation</a>.</p>
+
+  <footer>
+    <a href="index.html">Accueil</a> · <a href="conditions.html">Conditions</a> · <a href="confidentialite.html">Confidentialité</a> · <a href="mailto:contactdevinons@gmail.com">contactdevinons@gmail.com</a>
+  </footer>
+</main>
+</body>
+</html>
