@@ -7,7 +7,9 @@
 // servent que pour un téléphone en 0.1.8 (protocole 1), qui ne publie pas
 // encore les règles chiffrées.
 
-export const PROTOCOLE_CONNU = 2;
+// 3 : `telephones` (joueur -> téléphone lié), chacun joue ses propres tours.
+export const PROTOCOLE_CONNU = 3;
+export const PROTOCOLE_LIEN = 3;
 export const LETTRES = ['A', 'B', 'C', 'D'];
 
 // lib/domain/models/niveau_difficulte.dart et core/theme/couleurs_niveau.dart
@@ -181,6 +183,10 @@ export function lirePartie(etat) {
   const vue = {
     protocole,
     tropRecent: protocole > PROTOCOLE_CONNU,
+    // Le téléphone qui mène lie chaque joueur à son téléphone : on ne joue
+    // que ses tours. Plus ancien : on joue comme avant.
+    lienPossible: protocole >= PROTOCOLE_LIEN,
+    telephones: etat.telephones && typeof etat.telephones === 'object' ? Object.fromEntries(Object.entries(etat.telephones).map(([k, v]) => [String(k), String(v)])) : {},
     joueurs,
     etape: etat.etape,
     tour,

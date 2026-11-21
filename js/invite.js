@@ -39,6 +39,9 @@ let gardeJusqua = 0; // GardeToucher : touchers ignorés jusqu'à ce moment
 let desabonner = null;
 let arretee = false;
 let connait = null; // partie On se connaît
+let vuTour = null; // dernier tour où l'on a dit « Vu »
+let bonjourTour = null; // dernier tour où l'on a (re)demandé sa place
+const VERSION = 'web-3'; // sait dire « Vu » (protocole 3)
 
 // --- Petits outils -------------------------------------------------------
 
@@ -186,12 +189,34 @@ function recevoir(etat) {
     const garde = memoire(`devinons-joueur-${code}`);
     if (garde && (garde === 'spectateur' || vue.joueurs.some((j) => j.id === garde))) choisirJoueur(garde, false);
   }
+  apresEtat();
   rendre();
+}
+
+// « Vu » au début de son tour ; si le lien s'est défait (main reprise, ou
+// arrivée en cours de partie), on redemande sa place au tour suivant.
+function apresEtat() {
+  if (!moi || moi === 'spectateur' || !vue.lienPossible) return;
+  if (lie()) {
+    const enJeu = ['choixNiveau', 'question', 'tempsEcoule', 'correction'].includes(vue.etape);
+    if (enJeu && vue.joueurCourant.id === moi && vuTour !== vue.tour) {
+      vuTour = vue.tour;
+      envoyer({ action: 'vu', valeur: null, tour: vue.tour, etape: vue.etape }, true);
+      try { navigator.vibrate?.(200); } catch (_) { /* pas de vibreur */ }
+    }
+  } else if (!vue.telephones[moi] && bonjourTour !== vue.tour) {
+    bonjourTour = vue.tour;
+    envoyer({ action: 'bonjour', appareil: 'web', joueurId: moi }, true);
+  }
 }
 
 function choisirJoueur(id, nouveau = true) {
   moi = id;
   memoire(`devinons-joueur-${code}`, id);
+  if (id !== 'spectateur') {
+    if (vue) bonjourTour = vue.tour;
+    souvenirPrenom(vue?.joueurs.find((j) => j.id === id)?.nom);
+  }
   envoyer({ action: 'bonjour', appareil: 'web', ...(id !== 'spectateur' ? { joueurId: id } : {}) }, true);
   garderEcranAllume();
   if (nouveau) rendre();
@@ -199,7 +224,7 @@ function choisirJoueur(id, nouveau = true) {
 
 function envoyer(commande, discret = false) {
   if (arretee) return;
-  connexion.envoyer(code, { ...commande, version: 'web-1' }).catch((erreur) => {
+  connexion.envoyer(code, { ...commande, version: VERSION }).catch((erreur) => {
     console.warn(erreur);
     if (discret) return;
     envoye = null;
@@ -217,16 +242,37 @@ function geste(action, valeur = null, extra = {}) {
 
 // --- La partie ---------------------------------------------------------------
 
-const cEstMoi = () => vue.joueurCourant.id === moi || jouerPour === vue.tour;
+// Ce navigateur est lié à son joueur sur le téléphone qui mène.
+const lie = () => !!moi && moi !== 'spectateur' && vue.telephones[moi] === connexion.uid;
+
+// Sur un téléphone qui sait lier (protocole 3) : on ne joue que ses tours.
+// Sinon, comme avant (on peut aussi jouer à la place du joueur courant).
+const cEstMoi = () => (vue.lienPossible ? lie() && vue.joueurCourant.id === moi : vue.joueurCourant.id === moi || jouerPour === vue.tour);
+
+// Dernier prénom choisi sur ce navigateur : proposé en un toucher.
+function souvenirPrenom(nom) {
+  try { if (nom) localStorage.setItem('devinons-mon-prenom', nom); } catch (_) { /* navigation privée */ }
+}
+function prenomSouvenir() {
+  try { return localStorage.getItem('devinons-mon-prenom'); } catch (_) { return null; }
+}
+
+// Joueur déjà sur un autre téléphone (protocole 3).
+const pris = (j) => vue.lienPossible && !!vue.telephones[j.id] && vue.telephones[j.id] !== connexion.uid;
 
 function ecranQui() {
+  const propose = vue.lienPossible ? vue.joueurs.find((j) => j.nom === prenomSouvenir() && !pris(j)) : null;
+  const bouton = (j) => h('button', { class: 'choix-joueur', disabled: pris(j), onclick: () => choisirJoueur(j.id) },
+    avatar(j), h('span', null, j.nom, pris(j) ? h('span', { class: 'detail' }, 'Sur un autre téléphone') : null));
   afficher(
     logo(),
     aide(AIDE_TOUR_A_TOUR),
     h('h1', { class: 'centre', style: { fontSize: '34px' } }, 'Qui es-tu ?'),
     h('p', { class: 'centre' }, 'Touche ton prénom : tu joueras tes tours depuis ce téléphone.'),
-    h('div', { class: 'pile' },
-      vue.joueurs.map((j) => h('button', { class: 'choix-joueur', onclick: () => choisirJoueur(j.id) }, avatar(j), j.nom))),
+    propose ? h('div', { class: 'pile' },
+      h('button', { class: 'choix-joueur propose', onclick: () => choisirJoueur(propose.id) }, avatar(propose), h('span', null, propose.nom, h('span', { class: 'detail' }, 'C\'est moi'))),
+      h('p', { class: 'centre petit' }, 'Ou un autre joueur')) : null,
+    h('div', { class: 'pile' }, vue.joueurs.filter((j) => !propose || j.id !== propose.id).map(bouton)),
     h('div', { class: 'espace' }),
     h('div', { class: 'carte petit' },
       h('strong', null, 'Ton prénom n\'est pas là ? '),
@@ -253,7 +299,9 @@ function rendre(alerte) {
   }[vue.etape];
   if (!contenu) return ecranMessage('Un instant…', 'La partie continue sur l\'autre téléphone.');
   const noeuds = contenu();
-  afficher(...noeuds, alerte ? h('p', { class: 'erreur', role: 'alert' }, alerte) : null);
+  const autreTelephone = vue.lienPossible && moi && moi !== 'spectateur' && vue.joueurCourant.id === moi && !lie()
+    && ['choixNiveau', 'question', 'tempsEcoule'].includes(vue.etape);
+  afficher(...noeuds, autreTelephone ? h('p', { class: 'centre petit' }, 'Ton tour se joue sur l\'autre téléphone') : null, alerte ? h('p', { class: 'erreur', role: 'alert' }, alerte) : null);
   // Un choix qui vient d'apparaître ignore les touchers un court instant.
   const choix = app.querySelector('[data-choix]');
   if (choix && nouvelleCle) {
@@ -323,7 +371,7 @@ function ecranChoixNiveau() {
       derniereReponseEnBref(),
       h('div', { class: 'espace' }),
       vue.reponses.length ? lignesClassement(vue.classement) : null,
-      h('button', { class: 'bouton lien', onclick: () => { jouerPour = vue.tour; rendre(); } }, `Jouer à la place de ${j.nom}`),
+      vue.lienPossible ? null : h('button', { class: 'bouton lien', onclick: () => { jouerPour = vue.tour; rendre(); } }, `Jouer à la place de ${j.nom}`),
       lienTele(),
     ];
   }

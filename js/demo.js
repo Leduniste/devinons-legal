@@ -206,11 +206,17 @@ export function connexionDemo({ scene = null, jeu = null } = {}) {
   if (jeu === 'connait') return connexionDemoConnait({ scene });
   const options = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
   const ancien = options.get('hote') === '0181';
+  // &hote=p2 imite un téléphone des builds 31 à 34 (protocole 2 : il ne lie
+  // personne à son téléphone, tout le monde joue comme avant).
+  const p2 = options.get('hote') === 'p2';
+  // Pour les scènes figées, ?qui=lea : Léa est déjà liée à ce navigateur.
+  const quiDeDepart = options.get('qui');
   const lent = options.has('lent');
   const ecouteurs = new Set();
   const s = {
     etape: 'choixNiveau', tour: 0, niveau: null, surprise: false, question: null, reponses: [], rallonge: false,
     bonus: 0, retirees: [], joues: {}, appel: false, debut: 0, decision: 0, fige: !!scene, invite: null, minuterie: null, auto: null,
+    telephones: scene && quiDeDepart && !ancien && !p2 ? { [quiDeDepart]: 'demo-invite' } : {},
   };
   const pioche = Object.fromEntries(Object.entries(QUESTIONS).map(([k, v]) => [k, [...v]]));
   const total = JOUEURS.length * QUESTIONS_PAR_JOUEUR;
@@ -224,13 +230,14 @@ export function connexionDemo({ scene = null, jeu = null } = {}) {
     const r = s.reponses[s.reponses.length - 1];
     const phrases = r && r.correcte ? PHRASES_JUSTE : PHRASES_FAUX;
     const publie = JSON.parse(JSON.stringify({
-      protocole: 2, hote: 'demo', joueurs: JOUEURS, style: 'eclair', questionsParJoueur: QUESTIONS_PAR_JOUEUR, vitesse: 'balade',
+      protocole: p2 ? 2 : 3, hote: 'demo', joueurs: JOUEURS, style: 'eclair', questionsParJoueur: QUESTIONS_PAR_JOUEUR, vitesse: 'balade',
       etape: s.etape, tour: s.tour, niveau: s.niveau, surprise: s.surprise, question: s.question,
       reponses: s.reponses, rallonge: s.rallonge, jokers: ['cinquante', 'temps'], jokersJoues: s.joues,
       retirees: s.retirees, bonusTempsMs: s.bonus, appel: s.appel, ecouleMs: ecoule(),
       disponibles: Object.keys(BAREME), derniersAMiParcours: [],
       enjeux: Object.fromEntries(Object.keys(BAREME).map((k) => [k, { libelle: LIBELLES[k], gain: BAREME[k][0], perte: BAREME[k][1], chronoMs: CHRONOS[k] * 1000 }])),
       delaiDecisionMs: 8000,
+      ...(Object.keys(s.telephones).length && !p2 ? { telephones: s.telephones } : {}),
       ...(enCours ? { dureeChronoMs: duree(), dureeRallongeMs: Math.ceil(CHRONOS[s.niveau] / 2) * 1000, prixRallonge: demi(gain / 2), gainEnJeu: gain, perteEnJeu: perte } : {}),
       ...(s.etape === 'correction' && r ? { taquinerie: phrases[s.reponses.length % phrases.length].replace('{nom}', courant().nom) } : {}),
     }));
@@ -290,7 +297,18 @@ export function connexionDemo({ scene = null, jeu = null } = {}) {
   }
 
   function appliquer(c) {
-    if (c.action === 'bonjour') { s.invite = c.joueurId || null; return publier(); }
+    if (c.action === 'bonjour') {
+      s.invite = c.joueurId || null;
+      // Comme le vrai téléphone : lié sauf pendant sa propre question.
+      const sesTours = c.joueurId && c.joueurId === courant().id && ['question', 'tempsEcoule'].includes(s.etape);
+      if (c.joueurId && !p2 && !ancien && !s.telephones[c.joueurId] && !sesTours) s.telephones = { [c.joueurId]: 'demo-invite' };
+      return publier();
+    }
+    // « Vu » du téléphone lié, noté pour les essais (tests.html).
+    if (c.action === 'vu') {
+      if (typeof window !== 'undefined') (window.demoVus ??= []).push(c.tour);
+      return;
+    }
     if (c.tour !== s.tour || c.etape !== s.etape) return;
     switch (c.action) {
       case 'niveau': return choisirNiveau(c.valeur);
