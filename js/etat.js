@@ -8,7 +8,8 @@
 // encore les règles chiffrées.
 
 // 3 : `telephones` (joueur -> téléphone lié), chacun joue ses propres tours.
-export const PROTOCOLE_CONNU = 3;
+// 4 : les cartes (`jokersMain`, `handicaps`, `boutique`, `effets`, `carteJouee`).
+export const PROTOCOLE_CONNU = 4;
 export const PROTOCOLE_LIEN = 3;
 export const LETTRES = ['A', 'B', 'C', 'D'];
 
@@ -53,6 +54,106 @@ export const JOKERS = {
   temps: { nom: '+10 s', emoji: '⏱️' },
   appel: { nom: 'Appel', emoji: '📞' },
 };
+
+// features/tour_a_tour/cartes/cartes.dart : les noms sont ceux du protocole 4.
+// Un nom inconnu (version plus récente) est ignoré.
+export const CARTES = {
+  cinquante: { nom: '50/50', emoji: '✂️' },
+  temps: { nom: '+10 s', enfant: '+20 s', emoji: '⏱️' },
+  appel: { nom: 'Appel', emoji: '📞' },
+  echange: { nom: 'Échange', emoji: '🔄' },
+  double: { nom: 'Double ou rien', enfant: 'Double ou pareil', emoji: '🎯', avant: true },
+  zeroFaute: { nom: 'Zéro faute', emoji: '🛡️' },
+  chronoCourt: { nom: 'Chrono court', emoji: '⏱️', handicap: true },
+  gel: { nom: 'Joker gelé', emoji: '🧊', handicap: true },
+  de: { nom: 'Dé forcé', emoji: '🎲', handicap: true },
+  brouillard: { nom: 'Brouillard', emoji: '🌫️', handicap: true },
+};
+export const BOUTIQUES = { depart: 'Boutique du départ', milieu: 'Boutique du podium' };
+
+// Nom d'une carte pour ce joueur (version Enfant).
+export function nomCarte(id, enfant = false) {
+  const c = CARTES[id];
+  return c ? (enfant && c.enfant) || c.nom : '';
+}
+
+const listeCartes = (v) => (Array.isArray(v) ? v.filter((c) => CARTES[c]) : []);
+const objet = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
+const handicapLu = (h) => (h && CARTES[h.carte] && CARTES[h.carte].handicap && typeof h.de === 'string' ? { carte: h.carte, de: h.de } : null);
+
+// Cartes publiées par le téléphone qui mène (protocole 4) ; tout est vide
+// sans elles.
+function lireCartes(etat) {
+  const actives = etat.cartesActives === true;
+  const effets = objet(etat.effets);
+  const boutique = objet(etat.boutique);
+  const jouee = objet(etat.carteJouee);
+  return {
+    actives,
+    handicapsPermis: actives && etat.handicapsPermis === true,
+    enfants: Array.isArray(etat.enfants) ? etat.enfants.map(String) : [],
+    main: actives ? Object.fromEntries(Object.entries(objet(etat.jokersMain)).map(([k, v]) => [k, listeCartes(v)])) : {},
+    offertes: Object.fromEntries(Object.entries(objet(etat.offertes)).filter(([, v]) => CARTES[v])),
+    offertesPossibles: listeCartes(etat.offertesPossibles),
+    boutique: actives && BOUTIQUES[boutique.moment] ? { moment: boutique.moment, prets: Array.isArray(boutique.prets) ? boutique.prets.map(String) : [] } : null,
+    handicaps: Object.fromEntries(Object.entries(objet(etat.handicaps)).map(([k, v]) => [k, handicapLu(v)]).filter(([, v]) => v)),
+    effets: {
+      double: effets.double === true,
+      zeroFaute: effets.zeroFaute === true,
+      flou: effets.flou === true,
+      chronoAttend: effets.chronoAttend === true,
+      handicapJoue: effets.handicapJoue === true,
+      utilises: listeCartes(effets.utilises),
+      subi: handicapLu(effets.subi),
+      niveauImpose: typeof effets.niveauImpose === 'string' ? effets.niveauImpose : null,
+    },
+    carteJouee: CARTES[jouee.carte] && typeof jouee.joueur === 'string'
+      ? { carte: jouee.carte, joueur: jouee.joueur, cible: typeof jouee.cible === 'string' ? jouee.cible : null, tour: Number(jouee.tour) }
+      : null,
+  };
+}
+
+// Joueurs qu'un handicap peut viser maintenant (comme
+// PartieTourATour.ciblesPossibles) : un autre, sans handicap en attente, qui
+// a encore une question à jouer.
+export function cibles(vue) {
+  const n = vue.joueurs.length;
+  const t = vue.tour + 1;
+  return vue.joueurs.filter((j, rang) => j.id !== vue.joueurCourant.id && !vue.cartes.handicaps[j.id]
+    && t + ((rang - (t % n) + n) % n) < vue.nombreTours);
+}
+
+// Le joueur courant peut-il jouer [carte] maintenant ? (même règle que
+// PartieTourATour.carteDisponible ; le téléphone qui mène revérifie.)
+export function carteJouable(vue, carte) {
+  const c = vue.cartes;
+  const info = CARTES[carte];
+  if (!info || !c.actives || c.boutique || !(c.main[vue.joueurCourant.id] || []).includes(carte)) return false;
+  if (info.handicap) return vue.etape === 'choixNiveau' && c.handicapsPermis && !c.effets.handicapJoue && cibles(vue).length > 0;
+  if (c.effets.subi && c.effets.subi.carte === 'gel') return false;
+  if (info.avant) return vue.etape === 'choixNiveau' && !c.effets.double;
+  return vue.etape === 'question' && !vue.appel && !c.effets.flou && !c.effets.utilises.includes(carte)
+    && !(carte === 'echange' && vue.rallonge) && !(carte === 'cinquante' && vue.retirees.length > 0);
+}
+
+// « Léa joue 🧊 Joker gelé sur Tom », pour la carte jouée à ce tour.
+export function libelleCarteJouee(vue) {
+  const j = vue.cartes.carteJouee;
+  if (!j || j.tour !== vue.tour) return null;
+  const nom = (id) => vue.joueurs.find((x) => x.id === id)?.nom;
+  const qui = nom(j.joueur);
+  if (!qui) return null;
+  const cible = j.cible ? nom(j.cible) : null;
+  return `${qui} joue ${CARTES[j.carte].emoji} ${nomCarte(j.carte, vue.cartes.enfants.includes(j.joueur))}${cible ? ` sur ${cible}` : ''}`;
+}
+
+// Handicap subi par le joueur courant : « 🧊 Joker gelé, de la part de Léa ».
+export function libelleHandicapSubi(vue) {
+  const h = vue.cartes.effets.subi;
+  if (!h) return null;
+  const de = vue.joueurs.find((x) => x.id === h.de)?.nom;
+  return `${CARTES[h.carte].emoji} ${CARTES[h.carte].nom}${de ? `, de la part de ${de}` : ''}`;
+}
 
 // features/tour_a_tour/regles_tour_a_tour.dart (repli pour le protocole 1).
 const CHRONOS = {
@@ -212,6 +313,7 @@ export function lirePartie(etat) {
     dureeRallongeMs,
     delaiDecisionMs: Number(etat.delaiDecisionMs) || DELAI_DECISION_MS,
     taquinerie: typeof etat.taquinerie === 'string' ? etat.taquinerie : null,
+    cartes: lireCartes(etat),
   };
   vue.joueurCourant = joueurs[tour % joueurs.length];
   vue.numeroQuestion = Math.floor(tour / joueurs.length) + 1;
@@ -220,13 +322,15 @@ export function lirePartie(etat) {
   vue.classement = classement(joueurs, reponses);
   vue.scorePour = (id) => reponses.filter((r) => r.joueurId === id).reduce((t, r) => t + r.points, 0);
   vue.jokerJoue = (id, joker) => Array.isArray(vue.jokersJoues[id]) && vue.jokersJoues[id].includes(joker);
+  vue.nombreCartes = (id) => (vue.cartes.main[id] || []).length;
   return vue;
 }
 
 // Temps écoulé dans l'étape chronométrée, à [maintenant], d'après l'état
 // reçu à [recuA] (même calcul que PartieMiroir.ecouleEtape).
 export function ecouleA(vue, recuA, maintenant) {
-  if (vue.etape === 'question' && vue.appel) return vue.ecouleMs;
+  // Appel à la famille, ou Brouillard d'un Enfant : le chrono attend.
+  if (vue.etape === 'question' && (vue.appel || (vue.cartes && vue.cartes.effets.chronoAttend))) return vue.ecouleMs;
   if (vue.etape === 'question' || vue.etape === 'tempsEcoule') return vue.ecouleMs + Math.max(0, maintenant - recuA);
   return 0;
 }

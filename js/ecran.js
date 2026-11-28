@@ -4,7 +4,10 @@
 // n'envoie aucun geste.
 
 import { config, configuree } from './config.js';
-import { LETTRES, codeDepuis, dureeAffichee, ecouleA, formatPoints, libellePoints, lirePartie, texteSur, verdict } from './etat.js';
+import {
+  BOUTIQUES, LETTRES, codeDepuis, dureeAffichee, ecouleA, formatPoints, libelleCarteJouee, libelleHandicapSubi, libellePoints,
+  lirePartie, texteSur, verdict,
+} from './etat.js';
 import { AIDE_TELE, AIDE_TELE_CONNAIT, avatar, garderEcranAllume, h, lignesClassement, logo, podium } from './dessin.js';
 import { CATEGORIES, estConnait, lireConnait, restants } from './connait.js';
 
@@ -159,7 +162,7 @@ function bandeau() {
 function rendre() {
   if (connait) return rendreConnait();
   if (!vue) return;
-  const contenu = {
+  const contenu = vue.cartes.boutique ? ecranBoutique : {
     choixNiveau: ecranTour,
     question: ecranQuestion,
     tempsEcoule: ecranQuestion,
@@ -168,7 +171,7 @@ function rendre() {
     terminee: ecranFin,
   }[vue.etape];
   if (contenu) {
-    afficher(bandeau(), h('section', { class: `tele-scene tele-${vue.etape}` }, contenu()),
+    afficher(bandeau(), h('section', { class: `tele-scene tele-${vue.cartes.boutique ? 'boutique' : vue.etape}` }, contenu()),
       vue.etape !== 'terminee' ? h('footer', { class: 'tele-aide' }, AIDE_TELE) : null);
   }
 }
@@ -181,8 +184,33 @@ function ecranTour() {
       avatar(j, true),
       h('h1', null, j.nom),
       h('p', null, libellePoints(vue.scorePour(j.id))),
-      h('p', { class: 'points-attente tele-discret' }, 'Choix du niveau')),
-    vue.joueurs.length > 1 ? h('div', { class: 'tele-cote' }, lignesClassement(vue.classement)) : null,
+      h('p', { class: 'points-attente tele-discret' }, 'Choix du niveau'),
+      carteJouee()),
+    vue.joueurs.length > 1 ? h('div', { class: 'tele-cote' }, classement(vue.classement)) : null,
+  ];
+}
+
+// Classement, avec le nombre de cartes de chacun (protocole 4).
+const classement = (lignes) => lignesClassement(lignes, null, vue.cartes.actives ? vue.nombreCartes : null);
+
+// « Léa joue 🧊 Joker gelé sur Tom » (carte jouée à ce tour), ou le handicap
+// que subit le joueur.
+function carteJouee() {
+  const texte = libelleCarteJouee(vue) || libelleHandicapSubi(vue);
+  return texte ? h('p', { class: 'tele-carte' }, texte) : null;
+}
+
+// Boutique des cartes : qui est prêt (rien d'autre à montrer à la télé).
+function ecranBoutique() {
+  const b = vue.cartes.boutique;
+  return [
+    h('div', { class: 'tele-centre' },
+      h('h1', null, `🎴 ${BOUTIQUES[b.moment]}`),
+      h('p', null, 'Chacun choisit ses cartes, pour cette partie seulement.'),
+      h('div', { class: 'classement' }, vue.joueurs.map((j) => h('div', { class: 'ligne' },
+        avatar(j),
+        h('span', { class: 'nom' }, j.nom),
+        h('span', { class: 'score' }, b.prets.includes(j.id) ? '✓ Prêt' : '…'))))),
   ];
 }
 
@@ -194,7 +222,8 @@ function ecranQuestion() {
   const reponse = correction ? vue.derniereReponse : null;
   const decision = vue.etape === 'tempsEcoule';
   const couleur = decision ? 'var(--faux)' : vue.niveau ? vue.niveau.couleur : 'var(--bleu)';
-  const chrono = h('div', { class: 'chrono', 'data-chrono': correction || vue.appel ? 'pause' : '' },
+  const flou = !correction && vue.cartes.effets.flou;
+  const chrono = h('div', { class: 'chrono', 'data-chrono': correction || vue.appel || vue.cartes.effets.chronoAttend ? 'pause' : '' },
     h('div', { class: 'piste' }, h('div', { class: 'reste', style: { background: couleur } })),
     h('span', { class: 'secondes' }));
   majChrono(chrono);
@@ -204,13 +233,14 @@ function ecranQuestion() {
       h('span', { class: 'nom' }, j.nom),
       vue.niveau ? h('span', { class: 'tele-niveau', style: { background: vue.niveau.couleur, color: texteSur(vue.niveau.couleur) } }, vue.surprise ? `🎲 ${vue.niveau.libelle}` : vue.niveau.libelle) : null,
       vue.rallonge ? h('span', { class: 'tele-niveau', style: { background: 'var(--jaune)' } }, 'Temps bonus') : null),
+    correction ? null : carteJouee(),
     chrono,
     vue.appel ? h('div', { class: 'carte jaune droite tele-appel' }, '📞 Appel à la famille : chrono arrêté !') : null,
     decision
       ? h('div', { class: 'tele-decision' }, h('h1', null, 'Temps écoulé !'), h('p', { class: 'points-attente' }, `${j.nom} se décide : du temps bonus, ou pas`))
       : [
-        h('div', { class: 'carte tele-enonce' }, q.enonce),
-        h('div', { class: 'tele-propositions' }, q.propositions.map((texte, i) => {
+        h('div', { class: `carte tele-enonce${flou ? ' flou' : ''}` }, q.enonce),
+        h('div', { class: `tele-propositions${flou ? ' flou' : ''}` }, q.propositions.map((texte, i) => {
           let etat = '';
           if (reponse) etat = i === q.bonne ? ' juste' : i === reponse.proposition ? ' faux' : ' estompe';
           else if (vue.retirees.includes(i)) etat = ' estompe';
@@ -243,7 +273,7 @@ function ecranMiParcours() {
     h('div', { class: 'tele-centre' },
       h('h1', null, 'Mi-parcours !'),
       h('p', null, `${faites} question${faites > 1 ? 's' : ''} chacun, encore ${vue.questionsParJoueur - faites} à jouer`),
-      lignesClassement(vue.classement)),
+      classement(vue.classement)),
   ];
 }
 

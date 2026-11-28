@@ -116,3 +116,7 @@ body.tele .tele-scores .ligne .rang, body.tele .tele-scores .ligne .nom, body.te
 .tele-suivi { font: 700 calc(1.5 * var(--u))/1.1 var(--titre); }
 /* Une ligne d'explication, lisible à 3 mètres. */
 .tele-aide { font: 700 calc(1.9 * var(--u))/1.25 var(--texte); text-align: center; background: #fff; border-radius: calc(1 * var(--u)) calc(.4 * var(--u)) calc(1.2 * var(--u)) calc(.5 * var(--u)); padding: calc(0.562 * var(--u)) calc(1.5 * var(--u)); margin-top: calc(0.844 * var(--u)); box-shadow: calc(.25 * var(--u)) calc(.35 * var(--u)) 0 rgba(255, 72, 176, .7); }
+
+/* Cartes (protocole 4) : la carte jouée, le nombre de cartes de chacun. */
+.tele-carte { font: 700 calc(2.4 * var(--u))/1.2 var(--titre); text-align: center; margin: 0; }
+body.tele .ligne .nombre-cartes { font-size: calc(2 * var(--u)); }

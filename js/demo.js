@@ -13,6 +13,9 @@
 // chiffrées, ni petite phrase, ni « bonjour ») ; &lent=1 : personne ne
 // touche « Suivant » sur le téléphone qui mène.
 //
+// &cartes=1 imite un téléphone en protocole 4 (cartes) : boutique du départ
+// (&scene=boutique), mains, carte jouée et handicap subi.
+//
 // ?demo=connait : une partie On se connaît (lib/features/on_se_connait/
 // partage_connait.dart), où Mamie Jo répond sur le téléphone de la tablée
 // et Tom sur le sien ; ?scene=qui|secret|gardes|devinette|revelation|podium.
@@ -212,11 +215,19 @@ export function connexionDemo({ scene = null, jeu = null } = {}) {
   // Pour les scènes figées, ?qui=lea : Léa est déjà liée à ce navigateur.
   const quiDeDepart = options.get('qui');
   const lent = options.has('lent');
+  const cartes = options.has('cartes') && !ancien && !p2;
   const ecouteurs = new Set();
   const s = {
     etape: 'choixNiveau', tour: 0, niveau: null, surprise: false, question: null, reponses: [], rallonge: false,
     bonus: 0, retirees: [], joues: {}, appel: false, debut: 0, decision: 0, fige: !!scene, invite: null, minuterie: null, auto: null,
     telephones: scene && quiDeDepart && !ancien && !p2 ? { [quiDeDepart]: 'demo-invite' } : {},
+    // Cartes (protocole 4) : Léa est une Enfant.
+    boutique: cartes && scene === 'boutique' ? { moment: 'depart', prets: ['mamie'] } : null,
+    main: { mamie: ['echange', 'gel'], lea: ['temps', 'zeroFaute', 'double'], tom: ['cinquante', 'de'] },
+    offertes: { mamie: 'appel' },
+    carteJouee: null,
+    subi: null,
+    utilises: [],
   };
   const pioche = Object.fromEntries(Object.entries(QUESTIONS).map(([k, v]) => [k, [...v]]));
   const total = JOUEURS.length * QUESTIONS_PAR_JOUEUR;
@@ -240,6 +251,13 @@ export function connexionDemo({ scene = null, jeu = null } = {}) {
       ...(Object.keys(s.telephones).length && !p2 ? { telephones: s.telephones } : {}),
       ...(enCours ? { dureeChronoMs: duree(), dureeRallongeMs: Math.ceil(CHRONOS[s.niveau] / 2) * 1000, prixRallonge: demi(gain / 2), gainEnJeu: gain, perteEnJeu: perte } : {}),
       ...(s.etape === 'correction' && r ? { taquinerie: phrases[s.reponses.length % phrases.length].replace('{nom}', courant().nom) } : {}),
+      ...(cartes ? {
+        protocole: 4, partieId: 'demo-partie', cartesActives: true, handicapsPermis: true, enfants: ['lea'],
+        jokersMain: s.main, offertes: s.offertes, offertesPossibles: ['cinquante', 'appel'],
+        ...(s.boutique ? { boutique: s.boutique } : {}),
+        handicaps: {}, effets: { double: false, zeroFaute: false, flou: false, chronoAttend: false, handicapJoue: false, utilises: s.utilises, ...(s.subi ? { subi: s.subi } : {}) },
+        ...(s.carteJouee ? { carteJouee: s.carteJouee } : {}),
+      } : {}),
     }));
     if (ancien) {
       for (const champ of ['protocole', 'enjeux', 'delaiDecisionMs', 'dureeChronoMs', 'dureeRallongeMs', 'prixRallonge', 'gainEnJeu', 'perteEnJeu', 'taquinerie']) delete publie[champ];
@@ -291,7 +309,7 @@ export function connexionDemo({ scene = null, jeu = null } = {}) {
 
   function suivant() {
     if (s.etape !== 'correction') return;
-    Object.assign(s, { tour: s.tour + 1, niveau: null, question: null, rallonge: false, bonus: 0, retirees: [], appel: false });
+    Object.assign(s, { tour: s.tour + 1, niveau: null, question: null, rallonge: false, bonus: 0, retirees: [], appel: false, subi: null, utilises: [] });
     s.etape = s.tour >= total ? 'terminee' : s.tour === JOUEURS.length ? 'miParcours' : 'choixNiveau';
     publier();
   }
@@ -309,6 +327,13 @@ export function connexionDemo({ scene = null, jeu = null } = {}) {
       if (typeof window !== 'undefined') (window.demoVus ??= []).push(c.tour);
       return;
     }
+    // Boutique (protocole 4) : carte offerte et « C'est prêt ».
+    if (c.action === 'offerte' && s.boutique && typeof c.joueurId === 'string') { s.offertes = { ...s.offertes, [c.joueurId]: c.valeur }; return publier(); }
+    if (c.action === 'pret' && s.boutique && typeof c.joueurId === 'string') {
+      s.boutique = { ...s.boutique, prets: [...new Set([...s.boutique.prets, c.joueurId])] };
+      if (s.boutique.prets.length >= JOUEURS.length - 1) s.boutique = null; // Tom finit tout seul
+      return publier();
+    }
     if (c.tour !== s.tour || c.etape !== s.etape) return;
     switch (c.action) {
       case 'niveau': return choisirNiveau(c.valeur);
@@ -325,6 +350,17 @@ export function connexionDemo({ scene = null, jeu = null } = {}) {
         s.joues[id] = [...(s.joues[id] || []), c.valeur];
         if (c.valeur === 'cinquante') s.retirees = [0, 1, 2, 3].filter((i) => i !== s.question.bonne_reponse_index).slice(0, 2);
         if (c.valeur === 'temps') { s.bonus += 10000; minuter(duree() - ecoule() + 300, finDuChrono); }
+        return publier();
+      }
+      case 'carte': {
+        const [nom, rang] = String(c.valeur).split(':');
+        const id = courant().id;
+        if (!(s.main[id] || []).includes(nom)) return;
+        s.main = { ...s.main, [id]: s.main[id].filter((x, i) => i !== s.main[id].indexOf(nom)) };
+        s.carteJouee = { joueur: id, carte: nom, tour: s.tour, ...(rang !== undefined ? { cible: JOUEURS[Number(rang)]?.id } : {}) };
+        if (nom === 'cinquante') s.retirees = [0, 1, 2, 3].filter((i) => i !== s.question.bonne_reponse_index).slice(0, 2);
+        if (nom === 'temps') s.bonus += 20000;
+        s.utilises = [...s.utilises, nom];
         return publier();
       }
       case 'suivant': return suivant();
@@ -350,9 +386,15 @@ export function connexionDemo({ scene = null, jeu = null } = {}) {
   function preparer(nom) {
     const reponse = (j, niveau, correcte, points) => ({ questionId: 'x' + j + niveau, joueurId: j, niveau, propositionChoisie: correcte ? 0 : 1, correcte, tempsReponseMs: 4000, points, rallonge: false });
     const passe = [reponse('mamie', 'championDeLaMaison', true, 26), reponse('lea', 'petitMalin', true, 15.5), reponse('tom', 'pilierDeTable', false, -8)];
+    if (nom === 'boutique') return; // départ : tour 0, la boutique ouverte
     if (nom === 'podium') { s.reponses = [...passe, reponse('mamie', 'legendeDeLaFamille', false, -14), reponse('lea', 'pilierDeTable', true, 21), reponse('tom', 'petitMalin', true, 12)]; s.tour = total; s.etape = 'terminee'; return; }
     if (nom === 'miParcours') { s.reponses = passe; s.tour = 3; s.etape = 'miParcours'; return; }
     s.reponses = passe; s.tour = nom === 'attente' ? 5 : 4; // 4 = Léa, 5 = Tom
+    if (cartes) {
+      // Tom a joué Chrono court sur Léa, qui joue maintenant.
+      s.carteJouee = { joueur: 'tom', carte: 'chronoCourt', cible: 'lea', tour: 2 };
+      s.subi = { carte: 'chronoCourt', de: 'tom' };
+    }
     if (nom === 'choix') return;
     if (nom === 'attente') { choisirNiveau('pilierDeTable'); s.debut = Date.now() - 6000; return; }
     choisirNiveau('petitMalin');

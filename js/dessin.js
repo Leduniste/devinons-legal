@@ -29,12 +29,17 @@ export function avatar(joueur, grand = false) {
 
 export const logo = () => h('div', { class: 'logo', 'aria-label': 'Devinons' }, [...'Devinons'].map((l) => h('span', null, l)));
 
-export function lignesClassement(lignes, moi = null) {
-  return h('div', { class: 'classement' }, lignes.map((l) => h('div', { class: `ligne${l.joueur.id === moi ? ' moi' : ''}` },
-    h('span', { class: 'rang' }, l.rang),
-    avatar(l.joueur),
-    h('span', { class: 'nom' }, l.joueur.nom),
-    h('span', { class: 'score' }, libellePoints(l.score)))));
+// [cartes] : nombre de cartes en main de chaque joueur (protocole 4), ou null.
+export function lignesClassement(lignes, moi = null, cartes = null) {
+  return h('div', { class: 'classement' }, lignes.map((l) => {
+    const n = cartes ? cartes(l.joueur.id) : 0;
+    return h('div', { class: `ligne${l.joueur.id === moi ? ' moi' : ''}` },
+      h('span', { class: 'rang' }, l.rang),
+      avatar(l.joueur),
+      h('span', { class: 'nom' }, l.joueur.nom),
+      n > 0 ? h('span', { class: 'nombre-cartes', 'aria-label': `${n} carte${n > 1 ? 's' : ''}` }, `🎴 ${n}`) : null,
+      h('span', { class: 'score' }, libellePoints(l.score)));
+  }));
 }
 
 // Podium des trois premiers (or au centre), comme l'écran des résultats.

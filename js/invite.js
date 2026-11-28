@@ -13,8 +13,9 @@
 
 import { config, configuree } from './config.js';
 import {
-  ATTENTE_DOIGT_MS, GARDE_TOUCHER_MS, GRACE_MS, JOKERS, LETTRES, NIVEAUX,
-  codeDepuis, dureeAffichee, ecouleA, enjeu, formatPoints, libellePoints, lirePartie, texteSur, verdict,
+  ATTENTE_DOIGT_MS, BOUTIQUES, CARTES, GARDE_TOUCHER_MS, GRACE_MS, JOKERS, LETTRES, NIVEAUX,
+  carteJouable, cibles, codeDepuis, dureeAffichee, ecouleA, enjeu, formatPoints, libelleCarteJouee, libelleHandicapSubi,
+  libellePoints, lirePartie, nomCarte, texteSur, verdict,
 } from './etat.js';
 import {
   AIDE_CONNAIT, AIDE_TOUR_A_TOUR, aide, avatar, garderEcranAllume, h, installerBoutonAide, lignesClassement as classementDe, logo, podium,
@@ -41,7 +42,8 @@ let arretee = false;
 let connait = null; // partie On se connaît
 let vuTour = null; // dernier tour où l'on a dit « Vu »
 let bonjourTour = null; // dernier tour où l'on a (re)demandé sa place
-const VERSION = 'web-3'; // sait dire « Vu » (protocole 3)
+const VERSION = 'web-4'; // sait dire « Vu » (protocole 3) et connaît les cartes (protocole 4)
+let cibleDe = null; // handicap dont on choisit la cible
 
 // --- Petits outils -------------------------------------------------------
 
@@ -179,9 +181,12 @@ function recevoir(etat) {
     return ecranMessage('Page à mettre à jour', 'Cette partie vient d\'une version plus récente de Devinons. Recharge la page.',
       h('button', { class: 'bouton jaune', onclick: () => location.reload() }, 'Recharger'));
   }
-  if (!vue || nouvelle.tour !== vue.tour || nouvelle.etape !== vue.etape || nouvelle.rallonge !== vue.rallonge) {
+  const boutique = (v) => (v && v.cartes.boutique ? `${v.cartes.boutique.moment}|${v.cartes.boutique.prets.includes(moi)}` : '');
+  if (!vue || nouvelle.tour !== vue.tour || nouvelle.etape !== vue.etape || nouvelle.rallonge !== vue.rallonge
+    || boutique(nouvelle) !== boutique(vue)) {
     envoye = null;
     doigt = null;
+    cibleDe = null;
   }
   vue = nouvelle;
   recuA = performance.now();
@@ -286,10 +291,10 @@ function ecranQui() {
 function rendre(alerte) {
   if (!vue || arretee) return;
   if (!moi) return ecranQui();
-  const cle = `${vue.etape}|${vue.tour}|${vue.rallonge}`;
+  const cle = `${vue.etape}|${vue.tour}|${vue.rallonge}|${vue.cartes.boutique ? vue.cartes.boutique.moment : ''}`;
   const nouvelleCle = cle !== derniereCle;
   derniereCle = cle;
-  const contenu = {
+  const contenu = vue.cartes.boutique ? ecranBoutique : {
     choixNiveau: ecranChoixNiveau,
     question: ecranQuestion,
     tempsEcoule: ecranQuestion,
@@ -353,7 +358,7 @@ function derniereReponseEnBref() {
   return j ? h('p', { class: 'centre petit discret' }, `Dernière réponse : ${j.nom}, ${verdict(r)}`) : null;
 }
 
-const lignesClassement = (lignes) => classementDe(lignes, moi);
+const lignesClassement = (lignes) => classementDe(lignes, moi, vue.cartes.actives ? vue.nombreCartes : null);
 
 function ecranChoixNiveau() {
   const j = vue.joueurCourant;
@@ -367,6 +372,7 @@ function ecranChoixNiveau() {
         h('h1', null, j.nom),
         h('p', null, score),
         h('p', { class: 'points-attente' }, `${j.nom} choisit son niveau`)),
+      carteJoueeEnBref(),
       prochainTour(),
       derniereReponseEnBref(),
       h('div', { class: 'espace' }),
@@ -381,10 +387,13 @@ function ecranChoixNiveau() {
       h('p', null, moi === j.id ? 'À toi de jouer,' : 'Tu joues pour'),
       h('h1', null, j.nom),
       h('p', null, score)),
+    bandeauCartes(),
+    mainCartes(true),
     h('div', { class: 'espace' }),
-    h('h2', { class: 'centre' }, 'Choisis ton niveau'),
+    h('h2', { class: 'centre' }, vue.cartes.effets.niveauImpose ? '🎲 Le dé a choisi ton niveau' : 'Choisis ton niveau'),
     h('div', { class: 'espace', style: { height: '12px' } }),
-    h('div', { class: 'pile', 'data-choix': '' }, NIVEAUX.map((n) => {
+    // Dé forcé : un seul niveau, tiré par le dé.
+    h('div', { class: 'pile', 'data-choix': '' }, NIVEAUX.filter((n) => !vue.cartes.effets.niveauImpose || n.id === vue.cartes.effets.niveauImpose).map((n) => {
       const e = vue.enjeux[n.id];
       const texte = texteSur(n.couleur);
       const dispo = vue.disponibles.includes(n.id);
@@ -447,15 +456,20 @@ function ecranQuestion() {
 
   noeuds.push(etiquetteNiveau());
   if (vue.surprise && joue) noeuds.push(h('p', { class: 'centre petit' }, `🎲 Niveau surprise : +${vue.gainEnJeu} si c'est juste, −${vue.perteEnJeu} sinon`));
-  noeuds.push(...chrono(correction || vue.appel));
+  noeuds.push(...chrono(correction || vue.appel || vue.cartes.effets.chronoAttend));
+  if (!correction) noeuds.push(bandeauCartes());
+  if (!joue && !correction) noeuds.push(carteJoueeEnBref());
 
   if (!correction && !tempsEcoule && joue && vue.jokers.length) {
+    const bloque = (jk) => vue.cartes.actives && ((vue.cartes.effets.subi && vue.cartes.effets.subi.carte === 'gel')
+      || vue.cartes.effets.flou || vue.cartes.effets.utilises.includes(jk));
     noeuds.push(h('div', { class: 'jokers', style: { marginTop: '10px' } }, vue.jokers.map((jk) => h('button', {
       class: 'joker',
-      disabled: vue.jokerJoue(vue.joueurCourant.id, jk) || vue.appel || attente,
+      disabled: vue.jokerJoue(vue.joueurCourant.id, jk) || vue.appel || attente || bloque(jk),
       onclick: () => { envoye = null; envoyer({ action: 'joker', valeur: jk, tour: vue.tour, etape: vue.etape }); },
     }, h('span', null, JOKERS[jk].emoji), JOKERS[jk].nom))));
   }
+  if (!correction && !tempsEcoule && joue) noeuds.push(mainCartes(false));
   if (vue.appel) {
     noeuds.push(h('div', { class: 'carte jaune droite', style: { marginTop: '10px' } },
       h('strong', { class: 'titre', style: { fontSize: '18px' } }, '📞 Appel à la famille !'),
@@ -481,15 +495,17 @@ function ecranQuestion() {
     return noeuds;
   }
 
-  noeuds.push(h('div', { class: 'carte' }, h('div', { class: 'enonce' }, q.enonce)));
+  // Brouillard (handicap) : question et réponses floues un instant.
+  const flou = !correction && vue.cartes.effets.flou;
+  noeuds.push(h('div', { class: `carte${flou ? ' flou' : ''}` }, h('div', { class: 'enonce' }, q.enonce)));
   noeuds.push(h('div', { class: 'espace' }));
-  noeuds.push(h('div', { class: 'propositions', 'data-choix': correction || !joue ? null : '' }, q.propositions.map((texte, i) => {
+  noeuds.push(h('div', { class: `propositions${flou ? ' flou' : ''}`, 'data-choix': correction || !joue ? null : '' }, q.propositions.map((texte, i) => {
     const retiree = !correction && vue.retirees.includes(i);
     let etat = '';
     if (reponse) etat = i === q.bonne ? ' juste' : i === reponse.proposition ? ' faux' : ' estompe';
     else if (retiree) etat = ' estompe';
     else if (attente && envoye.valeur === i) etat = ' choisie';
-    const libre = !correction && joue && !retiree && !attente;
+    const libre = !correction && joue && !retiree && !attente && !flou;
     const bouton = h('button', {
       class: `proposition${etat}`,
       disabled: !libre,
@@ -539,6 +555,99 @@ function repondre(i) {
   if (ecouleMs > vue.dureeChronoMs + GRACE_MS && !vue.appel) return;
   doigt = null;
   geste('repondre', i, { ecouleMs });
+}
+
+// --- Cartes (protocole 4) ----------------------------------------------------
+
+// « Léa joue 🧊 Joker gelé sur Tom », pour ceux qui regardent.
+function carteJoueeEnBref() {
+  const l = libelleCarteJouee(vue);
+  return l ? h('p', { class: 'centre petit' }, l) : null;
+}
+
+// Ce qui pèse sur ce tour : handicap reçu, Double ou rien, Zéro faute, Brouillard.
+function bandeauCartes() {
+  const e = vue.cartes.effets;
+  const enfant = vue.cartes.enfants.includes(vue.joueurCourant.id);
+  const lignes = [
+    libelleHandicapSubi(vue),
+    e.double ? `🎯 ${nomCarte('double', enfant)} : +${vue.gainEnJeu || ''} si c'est juste` : null,
+    e.zeroFaute ? '🛡️ Zéro faute : une erreur ne coûte rien' : null,
+    e.flou ? '🌫️ Brouillard…' : null,
+  ].filter(Boolean);
+  return lignes.length ? h('div', { class: 'carte jaune droite petit', role: 'status', style: { marginTop: '10px' } }, lignes.map((l) => h('div', null, l))) : null;
+}
+
+// Cartes du joueur jouables à cette étape : handicaps et Double ou rien
+// avant la question ([avant]), les autres jokers pendant la question.
+function mainCartes(avant) {
+  const id = vue.joueurCourant.id;
+  const enfant = vue.cartes.enfants.includes(id);
+  const cartes = (vue.cartes.main[id] || []).filter((c) => !!(CARTES[c].handicap || CARTES[c].avant) === avant);
+  if (!cartes.length) return null;
+  const attente = envoye !== null;
+  if (avant && cibleDe && cartes.includes(cibleDe)) {
+    const carte = cibleDe;
+    return h('div', { class: 'pile', style: { marginTop: '10px' } },
+      h('p', { class: 'centre' }, `${CARTES[carte].emoji} ${CARTES[carte].nom} : pour qui ?`),
+      cibles(vue).map((j) => h('button', {
+        class: 'bouton blanc',
+        onclick: () => {
+          cibleDe = null;
+          envoyer({ action: 'carte', valeur: `${carte}:${vue.joueurs.findIndex((x) => x.id === j.id)}`, tour: vue.tour, etape: vue.etape });
+          rendre();
+        },
+      }, j.nom)),
+      h('button', { class: 'bouton lien', onclick: () => { cibleDe = null; rendre(); } }, 'Garder la carte'));
+  }
+  return h('div', { class: 'jokers cartes', style: { marginTop: '10px' } }, cartes.map((c) => h('button', {
+    class: `joker${CARTES[c].handicap ? ' handicap' : ''}`,
+    disabled: !carteJouable(vue, c) || attente,
+    onclick: () => {
+      if (CARTES[c].handicap) { cibleDe = c; return rendre(); }
+      envoyer({ action: 'carte', valeur: c, tour: vue.tour, etape: vue.etape });
+    },
+  }, h('span', null, CARTES[c].emoji), nomCarte(c, enfant))));
+}
+
+// Boutique des cartes (départ, podium) : sur la page web, la carte offerte
+// seulement, puis « C'est prêt ». Rien de pré-sélectionné, pas de minuteur.
+function ecranBoutique() {
+  const b = vue.cartes.boutique;
+  const titre = h('h1', { class: 'centre' }, `🎴 ${BOUTIQUES[b.moment]}`);
+  const pret = b.prets.includes(moi);
+  const joueur = vue.joueurs.some((j) => j.id === moi);
+  const etats = lignesBoutique(b);
+  if (!joueur || pret || (vue.lienPossible && !lie())) {
+    return [titre, h('p', { class: 'centre' }, pret ? 'Prêt ! On attend les autres.' : 'Chacun choisit ses cartes, pour cette partie seulement.'),
+      h('div', { class: 'espace' }), etats];
+  }
+  const enfant = vue.cartes.enfants.includes(moi);
+  const offertes = b.moment === 'depart' ? vue.cartes.offertesPossibles : [];
+  const choisie = vue.cartes.offertes[moi];
+  const attente = envoye !== null;
+  return [
+    titre,
+    h('p', { class: 'centre' }, 'Valable pour cette partie seulement.'),
+    offertes.length ? h('h2', null, '🎁 Ta carte offerte') : null,
+    offertes.length ? h('div', { class: 'jokers cartes', 'data-choix': '' }, offertes.map((c) => h('button', {
+      class: `joker${choisie === c ? ' choisie' : ''}`,
+      'aria-pressed': choisie === c ? 'true' : 'false',
+      disabled: attente,
+      onclick: () => envoyer({ action: 'offerte', valeur: c, joueurId: moi, tour: vue.tour, etape: vue.etape }),
+    }, h('span', null, CARTES[c].emoji), nomCarte(c, enfant)))) : null,
+    h('p', { class: 'petit' }, offertes.length ? 'Ici, seule la carte offerte se choisit.' : 'Rien à choisir ici pour cette boutique.'),
+    h('div', { class: 'espace' }),
+    h('button', { class: 'bouton blanc', disabled: attente, onclick: () => geste('pret', b.moment, { joueurId: moi }) }, 'C\'est prêt'),
+    h('div', { class: 'espace' }),
+    etats,
+  ];
+}
+
+function lignesBoutique(b) {
+  return h('div', { class: 'classement' }, vue.joueurs.map((j) => h('div', { class: `ligne${j.id === moi ? ' moi' : ''}` },
+    h('span', { class: 'nom' }, j.nom),
+    h('span', { class: 'score' }, b.prets.includes(j.id) ? '✓' : '…'))));
 }
 
 function ecranMiParcours() {
